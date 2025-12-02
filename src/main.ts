@@ -6,7 +6,9 @@ import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-
+import 'element-plus/theme-chalk/dark/css-vars.css'
+import '@/assets/icon/iconfont.css'
+// import './styles/element/index.scss'
 
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)

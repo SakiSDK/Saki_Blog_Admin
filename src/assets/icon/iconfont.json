@@ -1,0 +1,79 @@
+{
+  "id": "5079149",
+  "name": "Blog-Admin",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "34453204",
+      "name": "email",
+      "font_class": "email",
+      "unicode": "e856",
+      "unicode_decimal": 59478
+    },
+    {
+      "icon_id": "3928432",
+      "name": "trush",
+      "font_class": "trush",
+      "unicode": "e66a",
+      "unicode_decimal": 58986
+    },
+    {
+      "icon_id": "7239409",
+      "name": "bell",
+      "font_class": "bell",
+      "unicode": "e6e6",
+      "unicode_decimal": 59110
+    },
+    {
+      "icon_id": "1199117",
+      "name": "pen",
+      "font_class": "pen",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
+      "icon_id": "1290298",
+      "name": "Plus",
+      "font_class": "plus",
+      "unicode": "e60b",
+      "unicode_decimal": 58891
+    },
+    {
+      "icon_id": "45540513",
+      "name": "check",
+      "font_class": "check",
+      "unicode": "e98c",
+      "unicode_decimal": 59788
+    },
+    {
+      "icon_id": "45540526",
+      "name": "close",
+      "font_class": "close",
+      "unicode": "e98e",
+      "unicode_decimal": 59790
+    },
+    {
+      "icon_id": "45540804",
+      "name": "moon",
+      "font_class": "moon",
+      "unicode": "e9c1",
+      "unicode_decimal": 59841
+    },
+    {
+      "icon_id": "45540809",
+      "name": "sunny",
+      "font_class": "sunny",
+      "unicode": "e9c2",
+      "unicode_decimal": 59842
+    },
+    {
+      "icon_id": "45540821",
+      "name": "Language",
+      "font_class": "Language",
+      "unicode": "e9c6",
+      "unicode_decimal": 59846
+    }
+  ]
+}
