@@ -1,0 +1,328 @@
+@use "sass:map";
+@use "utils" as *;
+@use './animations' as anim;
+
+
+/** ---------- 单个样式封装 ---------- */
+// 间隔属性
+@mixin gap($v){
+  gap: space-value($v);
+}
+@mixin row-gap($v){
+  row-gap: space-value($v);
+}
+@mixin column-gap($v){
+  column-gap: space-value($v);
+}
+
+@mixin margin($v){
+  margin: space-value($v);
+}
+@mixin margin-d($d, $v){
+  @if is-direction-base($d) {
+    margin-#{direction-base-value($d)}: space-value($v);
+  } @else {
+    margin: space-valuue($v);
+  }
+}
+@mixin margin-x($v){
+  margin-left: space-value($v);
+  margin-right: space-value($v);
+}
+@mixin margin-y($v){
+  margin-top: space-value($v);
+  margin-bottom: space-value($v);
+}
+
+@mixin padding($v) {
+  padding: space-value($v);
+}
+@mixin padding-d($d, $v) {
+  @if is-direction-base($d) {
+    padding-#{direction-base-value($d)}: space-value($v);
+  } @else {
+    padding: space-valuue($v);
+  }
+}
+@mixin padding-x($v){
+  padding-left: space-value($v);
+  padding-right: space-value($v);
+}
+@mixin padding-y($v){
+  padding-top: space-value($v);
+  padding-bottom: space-value($v);
+}
+
+@mixin font-family($v){
+  font-family: font-family-value($v);
+}
+
+@mixin font-size($v, $imp: false){
+  @if $imp {
+    font-size: font-size-value($v) !important;
+  } @else {
+    font-size: font-size-value($v);
+  }
+}
+
+@mixin radius($v){
+  border-radius: radius-value($v);
+}
+@mixin radius-d($d, $v){
+  @if is-direction-base($d) {
+    border-#{direction-corner-value($d)}-radius: radius-value($v);
+  } @else {
+    border-radius: radius-value($v);
+  }
+}
+
+@mixin size($w, $h: $w){
+  width: $w;
+  height: $h;
+}
+
+@mixin min-size($w, $h: $w){
+  min-width: $w;
+  min-height: $h;
+}
+
+@mixin max-size($w, $h: $w){
+  max-width: $w;
+  max-height: $h;
+}
+
+@mixin z-index($v){
+  z-index: z-index-value($v);
+}
+
+
+
+/** ---------- 集合样式封装 ---------- */
+// object封装
+@mixin object-style(
+  $p: null,
+  $f: null,
+){
+  @if $p !=null {
+    object-position: $p;
+  }
+  @if $f !=null {
+    object-fit: $f;
+  }
+}
+
+// 容器样式
+@mixin container-style(
+  $p: sm lg,
+  $r: lg,
+  $b: null,
+  $bg: var(--surface-base),
+  $s: null,
+  $op: null,
+  $o: null,
+){
+  padding: space-value($p);
+  border-radius: radius-value($r);
+  @if $b != null {
+    border: $b;
+  }
+  @if $bg != null {
+    background: $bg;
+  }
+  @if $s != null {
+    box-shadow: $s;
+  }
+  @if $op != null {
+    opacity: $op;
+  }
+  @if $o != null {
+    overflow: $o;
+  }
+}
+// 字体样式
+@mixin font-style(
+  $f: null,
+  $s: null,
+  $c: null,
+  $w: null,
+){
+  @if $f != null {
+    font-family: $f;
+  }
+  @if $s != null {
+    font-size: font-size-value($s);
+  }
+  @if $c != null {
+    color: $c;
+  }
+  @if $w != null {
+    font-weight: $w;
+  }
+}
+// 文字样式
+@mixin text-style(
+  $lh: null,
+  $td: null,
+  $ta: null,
+  $wp: null,
+  $wb: null,
+  $ow: null,
+  $tw: null, 
+){
+  @if $lh != null {
+    line-height: $lh;
+  }
+  @if $td != null {
+    text-decoration: $td;
+  }
+  @if $ta != null {
+    text-align: $ta;
+  }
+  @if $wp != null {
+    white-space: $wp;
+  }
+  @if $wb != null {
+    word-break: $wb;
+  }
+  @if $ow != null {
+    overflow-wrap: $ow;
+  }
+  @if $tw != null {
+    text-wrap: $tw;
+  }
+}
+
+
+/** ---------- 布局封装 ---------- */
+// 响应式布局
+@mixin respond-down($w){
+  @media (max-width: breakpoint-value($w)) {
+    @content;
+  }
+}
+@mixin respond-up($w){
+  @media (min-width: breakpoint-value($w)) {
+    @content;
+  }
+}
+@mixin respond-between($min, $max){
+  @media (min-width: breakpoint-value($min)) and (max-width: breakpoint-value($max)) {
+    @content;
+  }
+}
+// 定位相关布局
+@mixin position-style(
+  $p: null,
+  $t: null,
+  $r: null,
+  $b: null,
+  $l: null,
+  $z: null,
+){
+  @if $p != null {
+    position: $p;
+  }
+  @if $t != null {
+    top: space-value($t);
+  }
+  @if $r != null {
+    right: space-value($r);
+  }
+  @if $b != null {
+    bottom: space-value($b);
+  }
+  @if $l != null {
+    left: space-value($l);
+  }
+  @if $z != null {
+    z-index: z-index-value($z);
+  }
+}
+
+// inline-flex 样式封装
+@mixin inline-flex-box(
+  $j: null,   // justify-content
+  $a: null,   // align-items
+  $g: null,   // gap
+  $d: null    // flex-direction（可选，增强灵活性）
+) {
+  display: inline-flex;
+
+  @if $d != null {
+    flex-direction: $d;
+  }
+
+  @if $j != null {
+    justify-content: $j;
+  }
+
+  @if $a != null {
+    align-items: $a;
+  }
+
+  @if $g != null {
+    @include gap($g);
+  }
+}
+
+// 弹性盒子样式
+@mixin flex-box(
+  $d: row,
+  $j: center,
+  $a: center,
+  $g: null,
+  $rg: null,
+  $cg: null,
+  $w: null,
+  $s: null,
+){ 
+  display: flex;
+  flex-direction: $d;
+  justify-content: $j;
+  align-items: $a;
+  @if $g != null {
+    gap: space-value($g);
+  }
+  @if $rg != null {
+    row-gap: space-value($rg);
+  }
+  @if $cg != null {
+    column-gap: space-value($cg);
+  }
+  @if $w != null {
+    flex-wrap: $w;
+  }
+  @if $s != null {
+    flex-shrink: $s;
+  }
+}
+// 网格盒子样式
+@mixin grid-box(
+  $c: 1,
+  $r: 1,
+  $g: null,
+  $rg: null,
+  $cg: null,
+  $j: null,
+  $a: null,
+){
+  display: grid;
+  grid-template-columns: repeat($c, 1fr);
+  grid-template-rows: repeat($r, 1fr);
+  @if $g != null {
+    gap: space-value($g);
+  }
+  @if $rg != null {
+    row-gap: space-value($rg);
+  }
+  @if $cg != null {
+    column-gap: space-value($cg);
+  }
+  @if $j != null {
+    justify-items: $j;
+  }
+  @if $a != null {
+    align-items: $a;
+  }
+}
+

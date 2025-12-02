@@ -1,0 +1,170 @@
+@use './utils' as *;
+@use './mixins' as *;
+@use './colors' as *;
+@use 'sass:color';
+@use './animations' as *;
+@use './colors' as *;
+
+// 背景色变化
+@mixin bg($color: var(--primary-base), $include-transition: false){
+  @if($include-transition){
+    @include transition(background-color);
+  }
+  &:hover {
+    background-color: $color;
+  }
+  &:active {
+    // 如果是 CSS 变量 → 使用透明度模拟变亮
+    background-color: color-mix(in srgb, $color 80%, black);
+  }
+}
+
+// 边框色变化
+@mixin border($color: var(--primary-base), $include-transition: false){
+  @if($include-transition){
+    @include transition(border-color);
+  }
+  &:hover {
+    border-color: $color;
+  }
+}
+
+// 颜色变化
+@mixin color($color: var(--primary-base), $include-transition: false){
+  @if($include-transition){
+    @include transition(color);
+  }
+  &:hover {
+    color: $color;
+  }
+}
+
+// 间距变化
+@mixin gap($gap: 0, $include-transition: false){
+  @if($include-transition){
+    @include transition(gap);
+  }
+  &:hover {
+    gap: space-value($gap);
+  }
+}
+
+// margin变化
+@mixin margin($direction: all, $margin: 0, $include-transition: false){
+  @if($include-transition){
+    @include transition(margin);
+  }
+  &:hover {
+    @if $direction == 'all' {
+      margin: space-value($margin);
+    } @else {
+      margin-#{direction-base-value($direction)}: space-value($margin);
+    }
+  }
+}
+
+// 透明度变化
+@mixin opacity($opacity: 0, $include-transition: false){
+  @if($include-transition){
+    @include transition(opacity);
+  }
+  &:hover {
+    opacity: opacity-value($opacity);
+  }
+}
+
+// hover 缩放
+@mixin scale($ratio: 1.05, $include-transition: false) {
+  @if $include-transition {
+    @include transition(transform);
+  }
+  &:hover {
+    transform: scale($ratio);
+  }
+  &:active {
+    transform: scale(calc(#{$ratio} - 0.03));
+  }
+}
+
+// 位移
+@mixin move($x: 0, $y: -2px, $include-transition: false) {
+  @if $include-transition {
+    @include transition(transform);
+  }
+  &:hover {
+    transform: translate($x, $y);
+  }
+}
+// 上下唯一
+@mixin move-y($y: -2px, $include-transition: false) {
+  @if $include-transition {
+    @include transition(transform);
+  }
+  &:hover {
+    transform: translateY($y);
+  }
+  &:active {
+    transform: translateY(0px);
+  }
+}
+
+// 旋转
+@mixin rotate($deg: 90deg, $include-transition: false) {
+  @if $include-transition {
+    @include transition(transform);
+  }
+  &:hover {
+    transform: rotate($deg);
+  }
+}
+
+// 模糊
+@mixin blur($px: 2px, $include-transition: false) {
+  @if $include-transition {
+    @include transition(filter);
+  }
+  &:hover {
+    filter: blur($px);
+  }
+}
+
+@mixin shadow(
+  $hover-shadow: (0 4px 16px rgba(0, 0, 0, 0.16)),
+  $include-transition: false
+) {
+
+  // 如果需要，添加过渡效果
+  @if $include-transition {
+    @include transition(box-shadow);
+  }
+
+  // 设置 hover 状态的阴影
+  &:hover {
+    box-shadow: $hover-shadow;
+  }
+}
+
+@mixin card($s: -5px, $sd: var(--shadow-dark), $t: false) {
+  @if $t {
+    @include transition(box-shadow transform border-color);
+  }
+  @include move(0, $s);
+  @include shadow($sd);
+  @include border;
+}
+
+@mixin underline-style($bt: -5px, $bg: var(--primary-base), $ip: true) {
+  @if $ip {
+    position: relative;
+  }
+  &::after {
+    content: "";
+    @include position-style($p: absolute, $l: 0, $b: $bt);
+    @include size(0, 1px);
+    background-color: $bg;
+    @include transition(width);
+  }
+  &:hover::after {
+    width: 100%;
+  }
+}

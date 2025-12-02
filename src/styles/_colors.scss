@@ -1,0 +1,150 @@
+@use './utils' as *;
+@use 'sass:map';
+@use 'sass:color';
+
+/** ---------- 基础色 ---------- */
+$base-colors: (
+  'blue': #1289f8,
+  'yellow': #ffa726,
+  'purple': #6a11cb,
+  'red': #f44336,
+  'white': #ffffff,
+  'black': #272727,
+  'green': #52c41a,
+  'gray': #999999,
+  'bg-light': #f7f9fe,
+  'bg-light-gradient': rgba(234, 239, 248),
+  'bg-dark': rgb(11,15,17),
+  'bg-dark-gradient': rgba(26, 26, 26),
+  'border-dark': #3d3d3f,
+  'border-light': #e3e8f7,
+);
+
+/** ---------- 自动生成颜色变体 ---------- */
+$colors: ();
+@each $name, $color in $base-colors {
+  $variant: generate-color-variant($color, $name);
+  $colors: map.merge($colors, $variant);
+}
+@mixin generate-colors{
+  :root {
+    @each $key, $value in $colors{
+      --#{$key}: #{$value};
+    } 
+  }
+}
+@include generate-colors();
+:root {
+  --white-subtler: color-mix(in srgb, var(--white-base) 60%, transparent);
+  --blue-strong: #0e6dc6;
+  --green-strong: #2f855a;
+  --yellow-strong: #dd7723;
+  --red-strong: #c53030;
+  --purple-strong: #5a0db3;
+  /* 亮色主题阴影系统 */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-base: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.15);
+  --shadow-2xl: 0 50px 80px rgba(0, 0, 0, 0.2);
+}
+
+/** ---------- 主题色 ---------- */
+// 使用body的类名控制主题变化
+@mixin generate-theme($is-dark: false){
+  $primary: if($is-dark, map.get($base-colors, 'yellow'), map.get($base-colors, 'blue'));
+  $secondary: if($is-dark, map.get($base-colors, 'red'), map.get($base-colors, 'purple'));
+  $text: if($is-dark, map.get($base-colors, 'white'), map.get($base-colors, 'black'));
+  $bg: if($is-dark, map.get($base-colors, 'bg-dark'), map.get($base-colors, 'bg-light'));
+  $bg-gradient: if(
+    $is-dark, 
+    map.get($base-colors, 'bg-dark'), 
+    map.get($base-colors, 'bg-light-gradient')
+  );
+  $neutral: map.get($base-colors, 'gray');
+  $interactive: if(
+    $is-dark, 
+    color.mix(map.get($base-colors, 'black'), map.get($base-colors, 'white'), 90%),
+    color.mix(map.get($base-colors, 'white'), map.get($base-colors, 'black'), 90%)
+  );
+  $surface: if(
+    $is-dark, 
+    map.get($base-colors, 'black'),
+    map.get($base-colors, 'white')
+  );
+
+  // 主色系
+  --primary-base: #{$primary};
+  --primary-subtle: #{color.adjust($primary, $alpha: -0.2)};
+  --primary-weak: #{color.adjust($primary, $alpha: -0.6)};
+  --primary-ghost: #{color.adjust($primary, $alpha: -0.8)};
+  --primary-transparent: #{color.adjust($primary, $alpha: -0.9)};
+
+  // 辅助色系
+  --secondary-base: #{$secondary};
+  --secondary-subtle: #{color.adjust($secondary, $alpha: -0.2)};
+  --secondary-weak: #{color.adjust($secondary, $alpha: -0.6)};
+  --secondary-ghost: #{color.adjust($secondary, $alpha: -0.8)};
+  --secondary-transparent: #{color.adjust($secondary, $alpha: -0.9)};
+
+  // 文字色系
+  --text-base: #{$text};
+  --text-subtle: #{color.adjust($text, $alpha: -0.2)};
+  --text-subtler:#{color.adjust($text, $alpha: -0.4)};
+  --text-weak: #{color.adjust($text, $alpha: -0.6)};
+  --text-ghost: #{color.adjust($text, $alpha: -0.8)};
+  --text-transparent: #{color.adjust($text, $alpha: -0.9)};
+
+  // 背景色系
+  --bg-base: #{$bg};
+  --bg-gradient: linear-gradient(180deg, #{$bg}, #{$bg-gradient});
+  --bg-subtle: #{color.adjust($bg, $alpha: -0.2)};
+  --bg-subtler:#{color.adjust($bg, $alpha: -0.4)};
+  --bg-weak: #{color.adjust($bg, $alpha: -0.6)};
+  --bg-ghost: #{color.adjust($bg, $alpha: -0.8)};
+  --bg-transparent: #{color.adjust($bg, $alpha: -0.9)};
+
+  // 卡片色
+  --surface-base: #{$surface};
+  --surface-subtle: #{color.adjust($surface, $alpha: -0.2)};
+  --surface-weak: #{color.adjust($surface, $alpha: -0.6)};
+  --surface-ghost: #{color.adjust($surface, $alpha: -0.8)};
+  --surface-transparent: #{color.adjust($surface, $alpha: -0.9)};
+
+  // 按钮色
+  --interactive-base: #{$interactive};
+  --interactive-subtle: #{color.adjust($interactive, $alpha: -0.2)};
+  --interactive-weak: #{color.adjust($interactive, $alpha: -0.6)};
+  --interactive-ghost: #{color.adjust($interactive, $alpha: -0.8)};
+  --interactive-transparent: #{color.adjust($interactive, $alpha: -0.9)};
+
+  // 中性色系
+  --neutral-base: #{$neutral};
+  --neutral-subtle: #{color.adjust($neutral, $alpha: -0.2)};
+  --neutral-weak: #{color.adjust($neutral, $alpha: -0.6)};
+  --neutral-ghost: #{color.adjust($neutral, $alpha: -0.8)};
+  --neutral-transparent: #{color.adjust($neutral, $alpha: -0.9)};
+
+}
+
+// 引用主题
+[data-theme='light'] {
+  @include generate-theme(false);
+  --border-base: 1px solid var(--border-light-base);
+  --border-base-color: var(--border-light-base);
+  --primary-strong: var(--blue-strong);
+  --bg-strong: rgb(216, 220, 228);
+  --text-disabled: #b4b4b4;
+  --interactive-disabled: rgb(245, 245, 245);
+}
+[data-theme='dark'] {
+  @include generate-theme(true);
+  --border-base: 1px solid var(--border-dark-base);
+  --border-base-color: var(--border-dark-base);
+  --primary-strong: var(--yellow-strong);
+  --bg-strong: rgb(45, 43, 43);
+  --text-disabled: #666666;
+  --interactive-disabled: rgb(40, 40, 40);
+}

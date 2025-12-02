@@ -1,0 +1,85 @@
+@use './mixins' as *;
+@use './animations' as anim;
+@use './hover' as hov;
+
+%full-size {
+  @include size(100%);
+}
+
+%full-width {
+  @include size(100%, auto);
+}
+
+%full-height {
+  @include size(auto, 100%);
+}
+
+%full-screen {
+  @include size(100vw, 100vh);
+}
+
+%flex-center {
+  @include flex-box;
+}
+
+%flex-column-center {
+  @include flex-box($d: column);
+}
+
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  @include padding( 0 xxl );
+  @include anim.transition($p: max-width, $dr: 'slow');
+  @include respond-down('xl') {
+    max-width: 1200px;
+  }
+  @include respond-down('md') {
+    max-width: 700px;
+  }
+  @include respond-down('sm') {
+    max-width: 600px;
+  }
+  @include respond-down('xs') {
+    max-width: 450px;
+  }
+  @include respond-down('xxs'){
+    max-width: 350px;
+  }
+}
+.reveal-transition {
+  @include anim.transition($dr: 1s, $p: opacity transform visibility);
+}
+.reveal-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5px);
+}
+.reveal-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/** ---------- 公共style ---------- */
+%card-container-base {
+  position: relative;
+  height: 100%;
+  @include container-style ($p: lg, $r: md, $b: var(--border-base), $o: hidden);
+  @include hov.card($t: true);
+}
+
+/** ---------- about-me页面共用style ---------- */
+%aboutme-tag {
+    @include position-style(absolute, $l: lg, $t: sm, $z: base);
+    @include font-style($s: sm, $c: var(--text-subtler));
+    @include z-index(base);
+}
+%aboutme-container {
+  @extend %card-container-base;
+  @include padding(sm lg);
+}
+%aboutme-title {
+  @include position-style($p: absolute, $t: 40px, $l: lg, $z: base);
+  @include font-style($s: title, $f: 'title', $c: var(--white-base));
+}

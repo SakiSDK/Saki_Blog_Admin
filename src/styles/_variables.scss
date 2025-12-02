@@ -1,0 +1,186 @@
+/** ---------- 容器间隔 ---------- */
+$space: (
+  title-height: 50px,
+  title: 40px,
+  xxl: 30px,
+  xl: 25px,
+  lg: 20px,
+  md: 15px,
+  sm: 10px,
+  xs: 5px,
+  xxs: 3px
+);
+
+/** ---------- 字体大小 ---------- */
+$font-size: (
+  logo: 100px,
+  xxl-title: 56px,
+  xl-title: 48px,
+  lg-title: 40px,
+  title: 32px,
+  xxl: 24px,
+  xl: 20px,
+  lg: 18px,
+  md: 16px,
+  sm: 14px,
+  xs: 12px,
+  xxs: 10px
+);
+
+/** ---------- 页面断点 ---------- */
+$breakpoints: (
+  xxs: 450px,
+  xs: 560px,
+  sm: 700px,
+  md: 900px,
+  lg: 1200px,
+  xl: 1400px,
+  xxl: 1536px
+);
+
+/** ---------- 字体 ---------- */
+$font-family: (
+  base: (
+    url('../assets/fonts/base-jiangcheng.woff2') format('woff2'),
+    url('../assets/fonts/base-jiangcheng.woff') format('woff'),
+    url('../assets/fonts/base-jiangcheng.ttf') format('truetype'),
+  ),
+  title: (
+    url('../assets/fonts/title-FZG.woff2') format('woff2'),
+    url('../assets/fonts/title-FZG.woff') format('woff'),
+    url('../assets/fonts/title-FZG.ttf') format('truetype'),
+  ),
+  pixel: (
+    url('../assets/fonts/pixel-ChangBanDianSong-12.woff2') format('woff2'),
+    url('../assets/fonts/pixel-ChangBanDianSong-12.woff') format('woff'),
+    url('../assets/fonts/pixel-ChangBanDianSong-12.ttf') format('truetype'),
+
+  )
+);
+/** ---------- 字体注册 ---------- */
+@each $font-name, $font-sources in $font-family {
+  @font-face {
+    font-family: '#{$font-name}';
+    src:$font-sources;
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+}
+
+/** ---------- 正常方向 ---------- */
+$direction-base: (
+  t: 'top', r: 'right', l: 'left', b: 'bottom'
+);
+
+/** ---------- 四角方向 ---------- */
+$direction-corner :(
+  tl: 'top-left', tr: 'top-right', bl: 'bottom-left', br: 'bottom-left'
+);
+
+
+/** ---------- 圆角 ---------- */
+$radius: (
+  sm: 4px,
+  md: 8px,
+  lg: 12px,
+  xl: 16px,
+  xxl: 25px,
+  xxxl: 30px,
+  full: 999px
+);
+
+/** ---------- z-index层级 ---------- */
+$z-index: (
+  auto: auto,
+  base: 10,
+  dropdown: 1000,
+  sticky: 1020,
+  fixed: 1030,
+  modal-backdrop: 1040,
+  modal: 1050,
+  popover: 1060,
+  tooltip: 1070,
+  navbar: 1080,
+  loading: 1100,
+);
+
+/** ---------- opacity ---------- */
+$opacity: (
+  solid: 1,
+  subtle: 0.8,
+  weak: 0.4,
+  ghost: 0.2,
+  transparent: 0,
+  none: 0
+);
+
+/** ---------- transition相关属性变量 ---------- */
+$transition-duration: (
+  fast: 0.15s,
+  base: 0.3s,
+  slow: 0.4s,
+  slower: 0.5s
+);
+$transition-timing-function: (
+  ease: ease,
+  ease-in: ease-in,
+  ease-out: ease-out,
+  ease-in-out: ease-in-out,
+  linear: linear,
+  bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55),
+  smooth: cubic-bezier(0.4, 0, 0.2, 1)
+);
+$transition-property: (
+  all: all,
+  color: color,
+  bg: background-color,
+  opacity: opacity,
+  transform: transform,
+  shadow: box-shadow,
+  border: border-color,
+  size: (width, height),
+  fade: (opacity, visibility),
+  slide: (transform, opacity)
+);
+$transition-delay: (
+  fast: 0.1s,
+  base: 0.2s,
+  slow: 0.3s,
+  slower: 0.4s
+);
+
+/** ---------- animation相关属性变量 ---------- */
+$animation-duration: (
+  'fast': 0.45s,
+  'base': 0.75s, 
+  'slow': 1.2s,
+  'slower': 1.8s,
+  'page': 0.9s,
+  'modal': 1.2s
+);
+
+$animation-timing-function: (
+  'ease': ease,
+  'ease-in': ease-in,
+  'ease-out': ease-out,
+  'ease-in-out': ease-in-out,
+  'linear': linear,
+  'bounce': cubic-bezier(0.68, -0.55, 0.265, 1.55),
+  'elastic': cubic-bezier(0.34, 1.56, 0.64, 1),
+  'smooth': cubic-bezier(0.4, 0, 0.2, 1)
+);
+
+$animation-iteration: (
+  'once': 1,
+  'infinite': infinite,
+  'twice': 2,
+  'thrice': 3
+);
+
+$animation-fill-mode: (
+  'none': none,
+  'forwards': forwards,
+  'backwards': backwards,
+  'both': both
+);

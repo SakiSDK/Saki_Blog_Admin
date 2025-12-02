@@ -1,0 +1,25 @@
+// 初始化层
+@use './animations' as *;
+@use './reset' as *;
+@use './variables' as *;
+@use './utils' as *;
+@use './mixins' as *;
+@use './hover' as *;
+@use './components' as *;
+@use './colors' as *;
+
+:root {
+  /* 系统UI字体栈 */
+  --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  /* 优雅衬线字体栈 */
+  --font-serif: "Times New Roman", Times, Georgia, Cambria, serif;
+
+  /* 代码字体栈 */
+  --font-mono: "Courier New", Courier, "Lucida Console", Monaco, monospace;
+
+  /* 数字字体栈（优化数字显示） */
+  --font-numeric: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}

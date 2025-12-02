@@ -1,0 +1,697 @@
+@use './utils' as *;
+@use 'sass:meta';
+@use 'sass:list';
+@use 'sass:map';
+@use 'sass:string';
+
+// transition样式封装
+@function process-transition-inputs(
+  $p: "all",
+  $dr: 'base',
+  $tf: 'ease',
+  $dl: null,
+  $imp: false,
+){
+  $processed-propertys: to-clean-list($p);
+  $dur: transition-duration($dr);
+  $timing: transition-timing($tf);
+  $delay: transition-delay($dl);
+  $transition-value: ();
+
+  @each $prop in $processed-propertys {
+    $duration-property: transition-property($prop);
+    $transition-item: #{$duration-property} #{$dur} #{$timing} #{if($dl == null, 0s, transition-delay($dl))};
+    $transition-value: list.append(
+      $transition-value, 
+      $transition-item,
+      $separator: comma
+    );
+  }
+
+  @return $transition-value;
+}
+@mixin transition(
+  $p: "all",
+  $dr: 'base',
+  $tf: 'ease',
+  $dl: null,
+  $imp: false,
+){
+  $processed-value: process-transition-inputs($p, $dr, $tf, $dl);
+  @if $imp {
+    transition: $processed-value !important;
+  } @else {
+    transition: $processed-value;
+  }
+}
+
+// animation样式封装
+@mixin animation(
+  $name: none,
+  $duration: 'base',
+  $timing: 'ease',
+  $delay: null,
+  $iteration: 'once',
+  $direction: normal,
+  $fill-mode: 'none',
+  $play-state: running,
+  $important: false
+) {
+  $anim-duration: animation-duration($duration);
+  $anim-timing: animation-timing($timing);
+  $anim-iteration: animation-iteration($iteration);
+  $anim-fill-mode: animation-fill-mode($fill-mode);
+
+  $animation-value: #{$name} #{$anim-duration} #{$anim-timing} #{$anim-iteration} #{$direction} #{$anim-fill-mode} #{$play-state};
+
+  @if $delay != null {
+    $animation-value: #{$animation-value} #{transition-delay($delay)};
+  }
+
+  @if $important {
+    animation: $animation-value !important;
+  } @else {
+    animation: $animation-value;
+  }
+}
+
+// ===== 快捷动画 Mixins =====
+// 淡入动画
+@mixin fade-in(
+  $duration: 'base',
+  $timing: 'ease-out',
+  $delay: null
+) {
+  @include animation(
+    $name: fadeIn,
+    $duration: $duration,
+    $timing: $timing,
+    $delay: $delay,
+    $fill-mode: 'both'
+  );
+}
+
+// 淡出动画
+@mixin fade-out(
+  $duration: 'base', 
+  $timing: 'ease-in',
+  $delay: null
+) {
+  @include animation(
+    $name: fadeOut,
+    $duration: $duration,
+    $timing: $timing,
+    $delay: $delay,
+    $fill-mode: 'both'
+  );
+}
+
+// 滑入动画
+@mixin slide-in(
+  $direction: 'up',
+  $duration: 'base',
+  $timing: 'ease-out',
+  $distance: 20px
+) {
+  $animation-name: slideInFrom #{string.to-upper-case(string.slice($direction, 1, 1))} #{string.slice($direction, 2)};
+  
+  @include animation(
+    $name: $animation-name,
+    $duration: $duration,
+    $timing: $timing,
+    $fill-mode: 'both'
+  );
+}
+
+// 弹出动画
+@mixin pop(
+  $duration: 'base',
+  $timing: 'bounce'
+) {
+  @include animation(
+    $name: popIn,
+    $duration: $duration,
+    $timing: $timing,
+    $fill-mode: 'both'
+  );
+}
+
+// 摇动动画
+@mixin shake(
+  $duration: 'slow',
+  $timing: 'ease-in-out'
+) {
+  @include animation(
+    $name: shake,
+    $duration: $duration,
+    $timing: $timing,
+    $iteration: 'once'
+  );
+}
+
+// 旋转动画
+@mixin spin(
+  $duration: 'slower',
+  $timing: 'linear',
+  $iteration: 'infinite'
+) {
+  @include animation(
+    $name: spin,
+    $duration: $duration,
+    $timing: $timing,
+    $iteration: $iteration
+  );
+}
+
+// 脉冲动画
+@mixin pulse(
+  $duration: 'slower',
+  $timing: 'ease-in-out',
+  $iteration: 'infinite'
+) {
+  @include animation(
+    $name: pulse,
+    $duration: $duration,
+    $timing: $timing,
+    $iteration: $iteration
+  );
+}
+
+// 弹跳动画
+@mixin bounce(
+  $duration: 'slow',
+  $timing: 'bounce',
+  $iteration: 'infinite'
+) {
+  @include animation(
+    $name: bounce,
+    $duration: $duration,
+    $timing: $timing,
+    $iteration: $iteration
+  );
+}
+
+// 骨架屏动画
+@mixin skeleton {
+  @include animation(
+    $name: skeletonPulse,
+    $duration: 1.5s,
+    $timing: 'ease-in-out',
+    $iteration: 'infinite'
+  );
+}
+
+// ===== 预设动画场景 =====
+
+// 页面进入动画
+@mixin page-enter {
+  @include animation-fade-in('page', 'ease-out');
+}
+
+// 页面离开动画  
+@mixin page-leave {
+  @include animation-fade-out('base', 'ease-in');
+}
+
+// 模态框动画
+@mixin modal {
+  @include animation-fade-in('modal', 'ease-out');
+  
+  .modal-content {
+    @include animation-pop('modal', 'elastic');
+  }
+}
+
+// 通知消息动画
+@mixin notification {
+  @include animation-slide-in('down', 'fast', 'ease-out');
+}
+
+// 加载状态动画
+@mixin loading {
+  @include animation-spin;
+}
+
+// 按钮点击动画
+@mixin button-press {
+  @include animation('buttonPress', 'fast', 'ease-out', $iteration: 'once');
+}
+
+// ===== 关键帧动画定义 =====
+@keyframes ripple {
+  to {
+    opacity: 0;
+    transform: scale(3);
+  }
+}
+
+@keyframes move-forever {
+    0% {
+        transform: translate3d(-90px,0,0);
+    }
+    100% {
+        transform: translate3d(85px,0,0);
+    }
+}
+
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// 淡入
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// 淡出
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+// 滚动
+@keyframes scroll {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+// 从上方滑入
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 从下方滑入
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 从左侧滑入
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// 从右侧滑入
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// 弹出效果
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// 摇动效果
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px);
+  }
+}
+
+// 旋转
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 脉冲
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// 弹跳
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -8px, 0);
+  }
+  70% {
+    transform: translate3d(0, -4px, 0);
+  }
+  90% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+// 按钮点击效果
+@keyframes buttonPress {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// 骨架屏脉冲
+@keyframes skeletonPulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+// 涟漪效果（你已有的）
+@keyframes ripple {
+  to {
+    opacity: 0;
+    transform: scale(3);
+  }
+}
+
+// 打字机效果
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+// 闪烁光标
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+
+/** ---------- transition动画 ---------- */
+// --------------------------
+// 动画配置
+// --------------------------
+$transition-duration: 0.3s !default; // 默认动画时长
+$transition-timing-function: ease !default; // 默认缓动函数
+$pop-in-duration: 0.5s !default; // 弹出动画时长
+
+// --------------------------
+// 基础 Mixin
+// --------------------------
+
+// 定义 transition 动画的基础结构
+@mixin transition-animation($name, $enter-props, $leave-props: $enter-props) {
+  // 进入和离开时的过渡效果
+  .#{$name}-enter-active,
+  .#{$name}-leave-active {
+    transition: all $transition-duration $transition-timing-function;
+  }
+
+  // 进入开始前的状态
+  .#{$name}-enter-from {
+    @each $prop, $value in $enter-props {
+      #{$prop}: $value;
+    }
+  }
+
+  // 离开结束后的状态
+  .#{$name}-leave-to {
+    @each $prop, $value in $leave-props {
+      #{$prop}: $value;
+    }
+  }
+}
+
+// 定义 keyframe 动画的基础结构
+@mixin keyframe-animation($name, $enter-keyframe, $leave-keyframe: 'fadeOut') {
+  // 进入时的动画
+  .#{$name}-enter-active {
+    animation: $enter-keyframe $pop-in-duration forwards;
+  }
+
+  // 离开时的动画
+  .#{$name}-leave-active {
+    animation: $leave-keyframe $transition-duration forwards;
+  }
+
+  // 进入开始前和离开结束后的状态
+  .#{$name}-enter-from,
+  .#{$name}-leave-to {
+    opacity: 0;
+  }
+}
+
+// 淡入淡出
+@include transition-animation('fade', (
+  opacity: 0
+));
+
+// 从上方滑入
+@include transition-animation('slide-in-from-top', (
+  opacity: 0,
+  transform: translateY(-100%)
+));
+
+// 从下方滑入
+@include transition-animation('slide-in-from-bottom', (
+  opacity: 0,
+  transform: translateY(100%)
+));
+
+// 从左侧滑入
+@include transition-animation('slide-in-from-left', (
+  opacity: 0,
+  transform: translateX(-100%)
+));
+
+// 从右侧滑入
+@include transition-animation('slide-in-from-right', (
+  opacity: 0,
+  transform: translateX(100%)
+));
+
+// 弹出效果 (使用 keyframe 动画)
+@include keyframe-animation('pop-in', 'popIn', 'fadeOut');
+
+// --------------------------
+// 你原有的 Keyframes (保持不变)
+// --------------------------
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+
+
+
+/** ---------- Vue Transition 动画系统 ---------- */
+.loading-fade-enter-from {
+  opacity: 1; // 进入前：直接显示
+}
+.loading-fade-enter-active {
+  transition: none;
+}
+.loading-fade-enter-to {
+  opacity: 1; // 进入后：最终状态为不透明
+}
+/* 离开阶段：淡入透明（核心动画） */
+.loading-fade-leave-from {
+  opacity: 1; /* 离开前：初始状态为不透明 */
+}
+.loading-fade-leave-active {
+  /* 离开过渡：opacity 从 1 → 0，慢速度，缓动平滑 */
+  transition: opacity 0.8s ease-in-out; /* duration 设为 slower（0.8s 左右） */
+  @include transition($p: opacity, $dr: slower, $tf: ease-in-out);
+}
+.loading-fade-leave-to {
+  opacity: 0; /* 离开后：最终状态为透明 */
+}
+/* 可选：给加载页根元素加基础样式，确保过渡生效 */
+// ::v-deep(.global-loading) {
+//   transition-property: opacity; /* 明确过渡属性（可选，增强兼容性） */
+// }
+$transition-anims: (
+  fade: (
+    from: (opacity: 0),
+    active: (
+      property: ( opacity ),
+      duration: slower,
+      timing-function: ease-in-out,
+    ),
+    to: (opacity: 1)
+  ),
+  fade-out: (
+    from: (
+      opacity: 1
+    ),
+    active: (
+      property: ( opacity ),
+      duration: slower,
+      timing-function: ease-in-out,
+    ),
+    to: (
+      opacity: 0
+    )
+  ),
+  slide-from-up: (
+    from: (transform: translateY(100%)),
+    active: (
+      property: ( transform ),
+      duration: base,
+      timing-function: ease-in-out,
+    ),
+    to: (transform: translateY(0))
+  ),
+  slide-from-down: (
+    from: (transform: translateY(-100%)),
+    active: (
+      property: ( transform ),
+      duration: base,
+      timing-function: ease-in-out,
+    ),
+    to: (transform: translateY(0))
+  ),
+  slide-from-left: (
+    from: (transform: translateX(-100%)),
+    active: (
+      property: ( transform ),
+      duration: base,
+      timing-function: ease-in-out,
+    ),
+    to: (transform: translateX(0))
+  ),
+  slide-from-right: (
+    from: (transform: translateX(100%)),
+    active: (
+      property: ( transform ),
+      duration: base,
+      timing-function: ease-in-out,
+    ),
+    to: (transform: translateX(0))
+  ),
+  zoom-in: (
+    from: (
+      scale: 0.1,
+      opacity: 0
+    ),
+    active: (
+      property: ( scale, opacity ),
+      duration: base,
+      timing-function: ease-in-out,
+    ),
+    to: (
+      scale: 1,
+      opacity: 1
+    )
+  ),
+);
+
+@mixin gen-transition($name, $config) {
+  .#{$name}-enter-from, 
+  .#{$name}-leave-to {
+    @each $k, $v in map.get($config, from) {
+      #{$k}: #{$v};
+    }
+  }
+  .#{$name}-enter-active, 
+  .#{$name}-leave-active {
+    $active: map.get($config, active);
+    $processed-transition: process-transition-inputs(
+      if(map.has-key($active, property), map.get($active, property), none), 
+      if(map.has-key($active, duration), map.get($active, duration), base), 
+      if(map.has-key($active, timing-function), map.get($active, timing-function), ease-in-out), 
+      if(map.has-key($active, delay), map.get($active, delay), 0s), 
+    );
+    transition: $processed-transition;
+  }
+  .#{$name}-enter-to, 
+  .#{$name}-leave-from {
+    @each $k, $v in map.get($config, to) {
+      #{$k}: #{$v};
+    }
+  }
+}
+
+@each $name, $config in $transition-anims { 
+  @include gen-transition($name, $config)
+}

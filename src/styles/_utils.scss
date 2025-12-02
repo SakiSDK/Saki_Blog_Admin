@@ -1,0 +1,279 @@
+@use 'sass:map';
+@use 'sass:string';
+@use "sass:meta";
+@use "sass:list";
+@use "sass:math";
+@use "sass:color";
+@use 'variables' as *;
+
+
+/** ---------- 通用函数 ---------- */
+// 处理[映射键名/数字/带单位值]，支持默认值和错误提示
+@function resolve-value(
+  $map: (),
+  $input: null,
+  $name: ''
+){
+  //带单位的数字
+  @if meta.type-of($input) == number and math.is-unitless($input) == false{
+    @return $input;
+  }
+  // 不带单位
+  @if meta.type-of($input) == number and math.is-unitless($input) == true{
+    @return #{$input}px;
+  }
+  // 3. 处理字符串（优先从映射查找，找不到则返回原字符串）
+  @if meta.type-of($input) == 'string' {
+    @if map.has-key($map, $input) {
+      @return map.get($map, $input);
+    } @else {
+      @return $input; // 非映射场景（如 space 的 "1px" 直接返回）
+    }
+  }
+
+  // 4. 其他类型（如列表）直接返回，加警告
+  @warn "#{$map-name}: 不支持的类型 `#{meta.type-of($input)}`，返回原值";
+  @return $input;
+}
+
+// 列表/字符串处理：统一将输入的值转为列表，过滤空值
+@function to-clean-list($input){
+  $list: ();
+  // 按空格分隔
+  @if meta.type-of($input) == 'string' {
+    $list: string.split($input, ',');
+  }
+  // 假如是列表，则直接返回
+  @else if meta.type-of($input) == 'list' {
+    $list: $input;
+  }
+  // 单个值：列表化
+  @else {
+    $list: ($input,);
+  }
+
+  @return $list;
+}
+// 处理多值间距（支持 "sm"、"sm md"、"sm 1px" 等）
+@function process-values($map, $s) {
+  $values: to-clean-list($s);
+  $result: ();
+
+  @each $v in $values {
+    // 复用通用解析函数，映射为 $space，无错误提示（允许直接传 px/rem）
+    $processed-v: resolve-value($map, $v, 'space');
+    $result: list.append($result, $processed-v);
+  }
+  @return $result;
+}
+
+/** ---------- 颜色相关 ---------- */
+// 颜色变体生成器：保持简洁
+@function generate-color-variant($base-color, $color-name) {
+  @return (
+    #{$color-name}-base: $base-color,
+    #{$color-name}-subtle: color.adjust($base-color, $alpha: -0.2), // 80% 透明度
+    #{$color-name}-weak: color.adjust($base-color, $alpha: -0.6),      // 40% 透明度
+    #{$color-name}-ghost: color.adjust($base-color, $alpha: -0.8),     // 20% 透明度
+    #{$color-name}-transparent: color.adjust($base-color, $alpha: -0.9) // 10% 透明度
+  )
+}
+
+
+
+
+/** ---------- 工具函数  ---------- */
+// 解析transition属性
+@function transition-duration($key: 'base') {
+  @if map.has-key($transition-duration, $key) {
+    @return map.get($transition-duration, $key);
+  }
+  // @warn "Transition duration `#{$key}` not found, using default";
+  @return $key;
+}
+
+@function transition-timing($key: 'ease') {
+  @if map.has-key($transition-timing-function, $key) {
+    @return map.get($transition-timing-function, $key);
+  }
+  // @warn "Transition timing `#{$key}` not found, using default";
+  @return ease;
+}
+@function transition-delay($key: '0s') {
+  @if map.has-key($transition-delay, $key) {
+    @return map.get($transition-delay, $key);
+  }
+  // @warn "Transition delay `#{$key}` not found, using default";
+  @return 0s;
+}
+
+@function transition-property($key: 'all') {
+
+  @if map.has-key($transition-property, $key) {
+    @return map.get($transition-property, $key);
+  }
+  // @warn "Transition property `#{$key}` not found, using default";
+  @return $key;
+}
+
+@function has-transiton-property($key) {
+  @return map.has-key($transition-property, $key);
+}
+
+
+
+
+/** ---------- 断点 ---------- */
+@function breakpoint-value($b) { 
+  @if has-breakpoint($b) {
+    @return map.get($breakpoints, $b);
+  } @else {
+    @return $b;
+  }
+}
+@function has-breakpoint($b) {
+  @return map.has-key($breakpoints, $b);
+}
+
+/** ---------- 字体样式 ---------- */
+@function font-family-value($f){
+  @if has-font-family($f) {
+    @return map.get($font-family, $f);
+  } @else {
+    @return $f;
+  }
+}
+@function has-font-family($f) {
+  @return map.has-key($font-family, $f);
+}
+
+/** ---------- 间距相关 ---------- */
+@function space-value($s) {
+  @return process-values($space, $s);
+}
+@function has-space($s) {
+  @return map.has-key($space, $s);
+}
+
+/** ---------- 边框圆角 ---------- */
+@function radius-value($r) {
+  @return resolve-value($radius, $r);
+}
+@function has-radius($r) {
+  @return map.has-key($radius, $r);
+}
+
+/** ---------- 文字大小 ---------- */
+@function font-size-value($s) {
+  @return resolve-value($font-size, $s);
+}
+@function has-font-size($s) {
+  @return map.has-key($font-size, $s);
+}
+
+/** ---------- 透明度 ---------- */
+@function opacity-value($o) {
+  @if map.has-key($opacity, $o){
+    @return map.get($opacity, $o);
+  } @else {
+    @return $o;
+  }
+}
+@function has-opacity($o) {
+  @return map.has-key($opacity, $o);
+}
+
+/** ---------- z-index ---------- */
+@function z-index-value($z) {
+  @if map.has-key($z-index, $z){
+    @return map.get($z-index, $z);
+  } @else {
+    @return $z;
+  }
+}
+
+@function has-z-index($z) {
+  @return map.has-key($z-index, $z);
+}
+
+@function animation-duration($key: 'base') {
+  @if map.has-key($animation-duration, $key) {
+    @return map.get($animation-duration, $key);
+  }
+  // @warn "Animation duration `#{$key}` not found";
+  @return 0.45s;
+}
+
+@function animation-timing($key: 'ease') {
+  @if map.has-key($animation-timing-function, $key) {
+    @return map.get($animation-timing-function, $key);
+  }
+  // @warn "Animation timing `#{$key}` not found";
+  @return ease;
+}
+
+@function animation-iteration($key: 'once') {
+  @if map.has-key($animation-iteration, $key) {
+    @return map.get($animation-iteration, $key);
+  }
+  // @warn "Animation iteration `#{$key}` not found";
+  @return 1;
+}
+
+@function animation-fill-mode($key: 'none') {
+  @if map.has-key($animation-fill-mode, $key) {
+    @return map.get($animation-fill-mode, $key);
+  }
+  // @warn "Animation fill mode `#{$key}` not found";
+  @return none;
+}
+
+/** ---------- 判断基础方向是否输入正确 ---------- */
+@function is-direction-base($d) {
+  @if map.has-key($direction-base, $d) == null {
+    // @warn '请输入正确的基础方向: #{map.keys($direction-base)}';
+    @return false;
+  }
+  @return true;
+}
+
+/** ---------- 判断四角方向是否输入正确 ---------- */
+@function is-direction-corner($d) {
+  @if map.has-key($direction-corner, $d) == null {
+    // @warn '请输入正确的四角方向: #{map.keys($direction-corner)}';
+    @return false;
+  }
+  @return true;
+}
+
+/** ---------- 通用方向判断函数 ---------- */
+@function is-direction($d) {
+  @if map.has-key($direction-base, $d) != null or map.has-key($direction-corner, $d) != null {
+    @return true;
+  } @else {
+    @warn '请输入正确的方向: #{map.keys($direction-base)}, #{map.keys($direction-corner)}';
+    @return false;
+  }
+}
+
+/** ---------- 获取正常方向 ---------- */
+@function direction-base-value($d){
+  @if is-direction-base($d) {
+    @return map.get($direction-base, $d);
+  } @else if (list.index(map.values($direction-base)), $d){
+    @return $d;
+  } @else {
+    @warn '请输入正确的方向';
+  }
+}
+
+/** ---------- 获取四角方向 ---------- */
+@function direction-corner-value($d){
+  @if is-direction-corner($d) {
+    @return map.get($direction-corner, $d);
+  } @else if (list.index(map.values($direction-corner)), $d){
+    @return $d;
+  } @else {
+    @warn '请输入正确的方向';
+  }
+}
