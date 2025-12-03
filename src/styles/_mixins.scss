@@ -37,11 +37,19 @@
 @mixin padding($v) {
   padding: space-value($v);
 }
-@mixin padding-d($d, $v) {
+@mixin padding-d($d, $v, $imp: false) {
   @if is-direction-base($d) {
-    padding-#{direction-base-value($d)}: space-value($v);
+    @if $imp {
+      padding-#{direction-base-value($d)}: space-value($v) !important;
+    } @else {
+      padding-#{direction-base-value($d)}: space-value($v);
+    }
   } @else {
-    padding: space-valuue($v);
+    @if $imp {
+      padding: space-valuue($v) !important;
+    } @else {
+      padding: space-valuue($v);
+    }
   }
 }
 @mixin padding-x($v){

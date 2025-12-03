@@ -11,3 +11,13 @@ export interface IconProps {
   // 图标标题 (无障碍访问)
   title?: string;
 }
+
+
+/** ---------- AsideBar组件Item ---------- */
+export interface MenuItem {
+  index: string;
+  icon: string;
+  label: string;
+  children?: MenuItem[];
+  badge?: number;
+}

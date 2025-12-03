@@ -10,11 +10,11 @@ export interface AppConfig {
   authorUrl: string;
 }
 export interface ServerConfig {
-  apiUrl: string; // 接口地址
-  apiBaseUrl: string; // 接口基础地址
-  staticBaseUrl: string;
-  uploadUrl: string;  // 上传地址
-
+  apiUrl: string;
+  apiBaseUrl: string;
+  staticUrl: string;
   timeout: number;
-  retry?: number;
+  retry: boolean;
+  retryDelay: number;
+  retryCount: number;
 }

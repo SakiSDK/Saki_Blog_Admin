@@ -8,7 +8,8 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import '@/assets/icon/iconfont.css'
-// import './styles/element/index.scss'
+import router from './router';
+
 
 window.addEventListener('beforeunload', () => {
   sessionStorage.setItem('reloaded', '1')
@@ -19,7 +20,8 @@ pinia.use(piniaPluginPersistedstate)
 
 const app = createApp(App)
 
-app.use(pinia);
 app.use(ElementPlus);
+app.use(router);
+app.use(pinia);
 app.mount('#app')
 

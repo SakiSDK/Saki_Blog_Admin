@@ -1,3 +1,9 @@
-export * as appConfig from './app.config'
-export * as envConfig from './env.config'
-export * as serverConfig from './server.config'
+import appConfig from './app.config'
+import envConfig from './env.config'
+import serverConfig from './server.config'
+
+export {
+  appConfig,
+  envConfig,
+  serverConfig
+}

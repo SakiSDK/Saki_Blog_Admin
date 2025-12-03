@@ -4,10 +4,13 @@ import VIcon from './VIcon.vue';
 import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import AvatarImg from '@/assets/imgs/avatar.webp'
+import { useStateStore } from '@/stores/state.store';
 
 // 获取主题状态
 const themeStore = useThemeStore();
 const { theme } = storeToRefs(themeStore);
+/** ---------- 侧边栏状态 ---------- */
+const stateStore = useStateStore();
 
 /** ---------- TopBar文案内容 ---------- */
 const topbarFields = ref([
@@ -42,6 +45,16 @@ const topbarFields = ref([
         <span class="topbar-sitename">
           博客管理
         </span>
+        <div class="topbar__item topbar__item-expand" @click="stateStore.toggleCollapsedAsideBar()">
+          <div 
+            class="topbar__expand"
+            :class="{
+              'topbar__expand--active': stateStore.isCollapsedAsideBar
+            }"
+          >
+            <div v-for="_ in 3"></div>
+          </div>
+        </div>
       </div>
       <div class="topbar__body">
         <div 
@@ -118,6 +131,16 @@ const topbarFields = ref([
       @include mix.size(25px);
       @include mix.font-style($s: sm);
     }
+    &-expand {
+      @include mix.margin-d(l, xxl);
+      &:hover {
+        .topbar__expand {
+          &>div {
+            background: var(--primary-base) !important;
+          }
+        }
+      }
+    }
   }
   &__user {
     height: 40px;
@@ -153,6 +176,28 @@ const topbarFields = ref([
       @include mix.respond-down(xs){
         @include mix.font-style($s: xs);
       }
+    }
+  }
+  &__expand { 
+    @include mix.size(15px);
+    @include mix.flex-box($d: column, $j: center, $a: flex-start, $g: xxs);
+    &>div {
+      width: 100%;
+      height: 3px;
+      background: var(--text-subtler);
+      @include anim.transition($p: width bg);
+    }
+    &--active {
+      &>div:nth-child(1) {
+        width: 100%;
+      }
+      &>div:nth-child(2) {
+        width: 70%;
+      }
+      &>div:nth-child(3) {
+        width: 40%;
+      }
+
     }
   }
 }

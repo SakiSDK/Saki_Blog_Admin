@@ -6,6 +6,48 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "39148059",
+      "name": "draft",
+      "font_class": "draft",
+      "unicode": "e8c7",
+      "unicode_decimal": 59591
+    },
+    {
+      "icon_id": "969378",
+      "name": "article",
+      "font_class": "article",
+      "unicode": "e650",
+      "unicode_decimal": 58960
+    },
+    {
+      "icon_id": "2526354",
+      "name": "security",
+      "font_class": "security",
+      "unicode": "e7db",
+      "unicode_decimal": 59355
+    },
+    {
+      "icon_id": "6151158",
+      "name": "upload",
+      "font_class": "upload",
+      "unicode": "e7da",
+      "unicode_decimal": 59354
+    },
+    {
+      "icon_id": "18018901",
+      "name": "edit",
+      "font_class": "edit",
+      "unicode": "e61e",
+      "unicode_decimal": 58910
+    },
+    {
+      "icon_id": "29323097",
+      "name": "basic",
+      "font_class": "basic",
+      "unicode": "e613",
+      "unicode_decimal": 58899
+    },
+    {
       "icon_id": "20113338",
       "name": "category",
       "font_class": "category",
@@ -28,8 +70,8 @@
     },
     {
       "icon_id": "837252",
-      "name": "tags",
-      "font_class": "tags",
+      "name": "tag",
+      "font_class": "tag",
       "unicode": "e826",
       "unicode_decimal": 59430
     },

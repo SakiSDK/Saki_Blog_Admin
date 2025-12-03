@@ -8,28 +8,27 @@ import TopBar from './components/global/TopBar.vue';
 
 <template>
   <div class="app">
-    <!-- <template> -->
-      <el-container class="app__container">
-        <el-header class="app__header">
-          <TopBar/>
-        </el-header>
+    <el-container class="app__container">
+      <el-header class="app__header">
+        <TopBar/>
+      </el-header>
+      <el-container>
+        <el-aside 
+          width="180px" 
+          class="app__aside"
+        >
+          <AsideBar/>
+        </el-aside>
         <el-container>
-          <el-aside 
-            width="180px" 
-            class="app__aside"
-          >
-            <AsideBar/>
-          </el-aside>
-          <el-container>
-            <el-main class="app__main">
-              <router-view/>
-            </el-main>
-            <el-footer class="app__footer" height="75px">
-              <FooterBar/>
-            </el-footer>
-          </el-container>
+          <el-main class="app__main">
+            <router-view/>
+          </el-main>
+          <el-footer class="app__footer" height="75px">
+            <FooterBar/>
+          </el-footer>
         </el-container>
       </el-container>
+    </el-container>
   </div>
 </template>
 

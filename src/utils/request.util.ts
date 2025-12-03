@@ -1,7 +1,11 @@
-import type { Axios, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import type {
+  AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig
+} from 'axios'
 import axios from 'axios'
+// import { message } from '@/plugins/message'
+import { ElMessage } from 'element-plus';
 import { trackRequest } from './apiTracker.util'
-import serverConfig from '@/config/server.config'
+import { serverConfig } from '@/configs';
 import { useTokenStore } from '@/stores/token.store'
 import { useNavigator } from './navigator.util'
 
@@ -9,14 +13,14 @@ import { useNavigator } from './navigator.util'
 
 
 /** ---------- 页面跳转 ---------- */
-const { go } = useNavigator();
+const navigator = useNavigator();
 
 
 /** ---------- Axios 核心配置 ---------- */
 // 创建 Axios 实例
 const service: AxiosInstance = axios.create({
-  baseURL: serverConfig.api_url,
-  timeout: 10000, // 请求超时时间（10秒）
+  baseURL: serverConfig.apiBaseUrl,
+  timeout: serverConfig.timeout, // 请求超时时间（10秒）
   headers: {
     'Content-Type': 'application/json;charset=utf-8'
   }
@@ -44,34 +48,38 @@ service.interceptors.request.use(
         } else {
           // 刷新失败（无新 Token）→ 跳登录页
           tokenStore.clearToken();
-          go('/login');
-          // message.show({
-          //   type: 'error',
-          //   duration: 3000,
-          //   title: '登录已过期，请重新登录',
-          // });
+          navigator.go('/login');
+          ElMessage({
+            type: 'error',
+            duration: 3000,
+            message: '登录已过期，请重新登录',
+            placement: 'top-right'
+          })
           return Promise.reject(new Error('Token 刷新失败'));
         }
       } catch (error) {
         tokenStore.clearToken();
-        go('/login');
-        // message.show({
-        //   type: 'error',
-        //   duration: 3000,
-        //   title: '登录已过期，请重新登录',
-        // });
+        navigator.go('/login');
+
+        ElMessage({
+          type: 'error',
+          duration: 3000,
+          message: '登录已过期，请重新登录',
+          placement: 'top-right'
+        })
         return Promise.reject(error);
       }
     }
     // 无 Token => 直接放行
     return config;
   },
-  (error) => {
-    // message.show({
-    //   type: 'error',
-    //   duration: 3000,
-    //   title: `请求配置错误: ${error.message}`,
-    // });
+  (error: any) => {
+    ElMessage({
+      type: 'error',
+      duration: 3000,
+      message: `请求配置错误: ${error.message}`,
+      placement: 'top-right'
+    })
     return Promise.reject(error);
   }
 )
@@ -81,29 +89,35 @@ service.interceptors.response.use(
   (response: AxiosResponse) => {
     const res = response.data;
     if (response.status < 200 || response.status >= 300) {
-      // message.show({
-      //   type: 'error',
-      //   duration: 3000,
-      //   title: `请求错误: ${res.message}`,
-      // });
+      ElMessage({
+        type: 'error',
+        duration: 3000,
+        message: `请求错误: ${res.message}`,
+        placement: 'top-right'
+      })
     }
     // 成功返回业务数据
     return res;
   },
-  async (error) => { 
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+  async (error: any) => { 
+    const originalRequest = error.config as AxiosRequestConfig & {
+      _retry?: boolean
+      _retry_count?: number
+      _retry_delay?: number
+    };
     const tokenStore = useTokenStore()
     // 处理 401 错误（Token 过期/无效，拦截器未处理到的场景）
     if (error.response?.status === 401) {
       // 避免无限重试
       if (originalRequest._retry) {
         tokenStore.clearToken();
-        go('/login')
-        // message.show({
-        //   type: 'error',
-        //   title: '登录已过期，请重新登录',
-        //   duration: 5000,
-        // })
+        navigator.go('/login')
+        ElMessage({
+          type: 'error',
+          duration: 3000,
+          message: '登录已过期，请重新登录',
+          placement: 'top-right'
+        })
       }
       originalRequest._retry = true;
 
@@ -118,33 +132,55 @@ service.interceptors.response.use(
         } else { 
           // 刷新失败 → 清 Token 跳登录
           tokenStore.clearToken();
-          go('/login');
-          // message.show({
-          //   type: 'error',
-          //   title: '登录已过期，请重新登录',
-          //   duration: 5000,
-          // })
+          navigator.go('/login');
+          ElMessage({
+            type: 'error',
+            duration: 3000,
+            message: '登录已过期，请重新登录',
+            placement: 'top-right'
+          })
           return Promise.reject(error);
         }
       } catch (error) {
         tokenStore.clearToken();
-        go('/login');
-        // message.show({
-        //   type: 'error',
-        //   title: '登录已过期，请重新登录',
-        //   duration: 5000,
-        // })
+        navigator.go('/login');
+        ElMessage({
+          type: 'error',
+          duration: 3000,
+          message: '登录已过期，请重新登录',
+          placement: 'top-right'
+        })
         return Promise.reject(error);
       }
     }
 
-    // 处理其他错误（404/500 等）
+    /** ---------- 非 401：普通错误的 retry 逻辑 ---------- */
+  if (serverConfig.retry) {
+    originalRequest._retry_count = originalRequest._retry_count || 0
+    originalRequest._retry_delay = serverConfig.retryDelay * 1000
+
+    if (originalRequest._retry_count < serverConfig.retryCount) {
+      originalRequest._retry_count++
+
+      console.warn(
+        `[Axios Retry] 第 ${originalRequest._retry_count}/${serverConfig.retryCount} 次尝试...`
+      )
+
+      // 延迟 retry
+      await new Promise(res => setTimeout(res, originalRequest._retry_delay))
+
+      return service(originalRequest)
+    }
+  }
+
+    /** ---------- 超过 retry 或已失败 ---------- */
     const errorMsg = error.response?.data?.message || error.message || '请求出错';
-    // message.show({
-    //   type: 'error',
-    //   title: errorMsg,
-    //   duration: 5000,
-    // });
+    ElMessage({
+      type: 'error',
+      duration: 3000,
+      message: errorMsg,
+      placement: 'top-right'
+    })
     return Promise.reject(error);
   }
 )

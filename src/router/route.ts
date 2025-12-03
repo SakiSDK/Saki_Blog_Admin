@@ -51,9 +51,9 @@ const routes: RouteRecordRaw[] = [
   },
   // 文章管理（嵌套路由）
   {
-    path: '/articles',
+    path: '/article',
     name: 'Article',
-    redirect: '/articles/list', // 默认重定向到文章列表
+    redirect: '/article/list', // 默认重定向到文章列表
     meta: {
       // requiresAuth: true,
       //? 测试环境
@@ -86,6 +86,18 @@ const routes: RouteRecordRaw[] = [
         component: ArticleDraft,
         meta: { title: '草稿箱' },
       },
+      {
+        path: 'category',
+        name: 'Category',
+        component: Category,
+        meta: {title: '分类管理'},
+      },
+      {
+        path: 'tag',
+        name: 'Tag',
+        component: Tag,
+        meta: {title: '标签管理'},
+      }
     ],
   },
   // 相册管理
@@ -101,37 +113,11 @@ const routes: RouteRecordRaw[] = [
       roles: ['admin'], // 仅管理员可访问
     },
   },
-  // 分类管理
-  {
-    path: '/category',
-    name: 'Category',
-    component: Category,
-    meta: {
-      // requiresAuth: true,
-      //? 测试环境
-      requiresAuth: false,
-      title: '分类管理',
-      roles: ['admin'], // 仅管理员可访问
-    },
-  },
-  // 标签管理
-  {
-    path: '/tag',
-    name: 'Tag',
-    component: Tag,
-    meta: {
-      // requiresAuth: true,
-      //? 测试环境
-      requiresAuth: false,
-      title: '标签管理',
-      roles: ['admin', 'editor'],
-    },
-  },
   // 系统设置（嵌套路由）
   {
-    path: '/settings',
-    name: 'Settings',
-    redirect: '/settings/basic',
+    path: '/setting',
+    name: 'Setting',
+    redirect: '/setting/basic',
     meta: {
       // requiresAuth: true,
       //? 测试环境
@@ -142,7 +128,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: 'basic',
-        name: 'SettingsBasic',
+        name: 'SettingBasic',
         component: BasicSettings,
         meta: { title: '基础设置' },
       },
@@ -154,13 +140,13 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'email',
-        name: 'SettingsEmail',
+        name: 'SettingEmail',
         component: EmailSettings,
         meta: { title: '邮箱设置' },
       },
       {
         path: 'seo',
-        name: 'SettingsSeo',
+        name: 'SettingSeo',
         component: SeoSettings,
         meta: { title: 'SEO 设置' },
       },
@@ -176,3 +162,5 @@ const routes: RouteRecordRaw[] = [
     },
   },
 ]
+
+export default routes;
