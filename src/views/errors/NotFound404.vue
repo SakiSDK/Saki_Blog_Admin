@@ -4,7 +4,7 @@
 
 <template>
   <div>
-    comment
+    404
   </div>
 </template>
 

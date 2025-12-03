@@ -28,6 +28,8 @@ declare module 'vue' {
     GlobalMessage: typeof import('./src/components/global/GlobalMessage.vue')['default']
     Icon: typeof import('./src/components/global/Icon.vue')['default']
     PageHeader: typeof import('./src/components/bases/PageHeader.vue')['default']
+    RouterLink: typeof import('vue-router')['RouterLink']
+    RouterView: typeof import('vue-router')['RouterView']
     TopBar: typeof import('./src/components/global/TopBar.vue')['default']
     VButton: typeof import('./src/components/global/VButton.vue')['default']
     VIcon: typeof import('./src/components/global/VIcon.vue')['default']

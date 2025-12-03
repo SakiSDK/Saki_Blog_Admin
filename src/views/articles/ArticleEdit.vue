@@ -4,7 +4,7 @@
 
 <template>
   <div>
-    comment
+    edit
   </div>
 </template>
 

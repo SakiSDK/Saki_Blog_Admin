@@ -10,6 +10,10 @@ import 'element-plus/theme-chalk/dark/css-vars.css'
 import '@/assets/icon/iconfont.css'
 // import './styles/element/index.scss'
 
+window.addEventListener('beforeunload', () => {
+  sessionStorage.setItem('reloaded', '1')
+})
+
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 

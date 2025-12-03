@@ -6,6 +6,69 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "20113338",
+      "name": "category",
+      "font_class": "category",
+      "unicode": "e6a2",
+      "unicode_decimal": 59042
+    },
+    {
+      "icon_id": "19100301",
+      "name": "picture",
+      "font_class": "picture",
+      "unicode": "e653",
+      "unicode_decimal": 58963
+    },
+    {
+      "icon_id": "415258",
+      "name": "setting",
+      "font_class": "setting",
+      "unicode": "e66f",
+      "unicode_decimal": 58991
+    },
+    {
+      "icon_id": "837252",
+      "name": "tags",
+      "font_class": "tags",
+      "unicode": "e826",
+      "unicode_decimal": 59430
+    },
+    {
+      "icon_id": "10793071",
+      "name": "user",
+      "font_class": "user",
+      "unicode": "e627",
+      "unicode_decimal": 58919
+    },
+    {
+      "icon_id": "15319926",
+      "name": "home",
+      "font_class": "home",
+      "unicode": "e6f1",
+      "unicode_decimal": 59121
+    },
+    {
+      "icon_id": "20113665",
+      "name": "album",
+      "font_class": "album",
+      "unicode": "e6cd",
+      "unicode_decimal": 59085
+    },
+    {
+      "icon_id": "27363502",
+      "name": "folder",
+      "font_class": "folder",
+      "unicode": "eb33",
+      "unicode_decimal": 60211
+    },
+    {
+      "icon_id": "40379229",
+      "name": "comment",
+      "font_class": "comment",
+      "unicode": "e670",
+      "unicode_decimal": 58992
+    },
+    {
       "icon_id": "34453204",
       "name": "email",
       "font_class": "email",
