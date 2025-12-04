@@ -20,9 +20,9 @@ const tags: TagItem[] = [
     description: "前端开发语言，用于网页交互",
     postCount: 145,
     createdAt: "2023-01-15",
-    status: true
+    status: true,
   },
-  { id: 2, name: "UI设计", description: "用户界面设计与优化", order: 1, postCount: 89, createdAt: "2023-02-10", statue: true },
+  { id: 2, name: "UI设计", description: "用户界面设计与优化", order: 1, postCount: 89, createdAt: "2023-02-10", status: true },
   { id: 3, name: "项目管理", description: "项目进度管理与团队协作", order: 1, postCount: 67, createdAt: "2023-02-28", status: true },
   { id: 4, name: "React", description: "流行的前端JavaScript框架",order: 1, postCount: 132, createdAt: "2023-03-05", status: true },
   { id: 5, name: "市场营销", description: "产品推广与市场策略",order: 1, postCount: 56, createdAt: "2023-03-12", status: true },
@@ -43,16 +43,6 @@ const tags: TagItem[] = [
   { id: 20, name: "战略规划", description: "企业长期发展战略",order: 1, postCount: 22, createdAt: "2023-08-12", status: true },
 ];
 
-// 定义标签类型接口
-interface TagItem {
-  id: number;
-  name: string;
-  color: string;
-  description: string;
-  postCount: number;
-  createdAt: string;
-  status: boolean;
-}
 
 // 新增 tableColumnField 接口定义
 interface tableColumnField {
@@ -149,13 +139,59 @@ const tableColumnFields: tableColumnField[] = [
 </template>
 
 <style lang="scss" scoped>
+:deep(.el-table) {
+  @include mix.radius(md);
+  tr {
+    background: var(--surface-base);
+    &:hover>td.el-table__cell {
+      background-color: var(--bg-base);
+      &:first-child {
+        border-left: var(--el-table-border);
+        @include mix.radius-d(bl, md);
+        @include mix.radius-d(tl, md);
+        &::before {
+          background-color: var(--surface-base);
+        }
+      }
+      &:last-child {
+        border-right: var(--el-table-border);
+        @include mix.radius-d(br, md);
+        @include mix.radius-d(tr, md);
+        &::after {
+          background-color: var(--surface-base);
+        }
+      }
+    }
+  }
+  .el-table__cell {
+    @include anim.transition($p: bg border-color border-radius, $dr: 'slow');
+    &:first-child {
+      border-left: 1px solid transparent;
+      &::before {
+        content: '';
+        width: 100%;
+        height: 1px;
+        @include mix.position-style($p: absolute, $t: -1px, $l: 0);
+      }
+    }
+    &:last-child {
+      border-right: 1px solid transparent;
+      &::after {
+        content: '';
+        width: 100%;
+        height: 1px;
+        @include mix.position-style($p: absolute, $t: -1px, $r: 0);
+      }
+    }
+  }
+}
 .tag-list {
   width: 100%;
   &__container {
     @include mix.container-style($p: 0, $r: md, $b: 1px solid var(--el-border-color), $o: hidden);
   }
   &__body {
-    @include mix.padding-d(t, lg);
+    @include mix.padding(lg);
   }
 }
 </style>

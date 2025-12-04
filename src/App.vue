@@ -86,15 +86,21 @@ onMounted(async() => {
         <el-container>
           <el-main 
             class="app__main" 
-            v-loading="stateStore.isGlobalLoading||stateStore.isRouteLoading"
-            element-loading-text="LOADING..."
-            :element-loading-spinner="svg"
-            element-loading-svg-view-box="-10, -10, 50, 50"
-            v-if="stateStore.isGlobalLoading||stateStore.isRouteLoading"
           >
-          </el-main>
-          <el-main class="app__main" v-else>
-            <router-view/>
+            <Transition name="loading-fade">
+              <div 
+                class="app__mask"
+                v-loading="stateStore.isGlobalLoading||stateStore.isRouteLoading"
+                element-loading-text="LOADING..."
+                :element-loading-spinner="svg"
+                element-loading-svg-view-box="-10, -10, 50, 50"
+                v-if="stateStore.isGlobalLoading||stateStore.isRouteLoading"
+              >
+              </div>
+            </Transition>
+            <Transition name="fade">
+              <router-view/>
+            </Transition>
           </el-main>
           <el-footer class="app__footer" height="75px">
             <FooterBar/>
@@ -119,11 +125,20 @@ onMounted(async() => {
   }
 }
 .app {
+  &__mask {
+    @include mix.position-style($p: absolute, $t: 0, $l: 0);
+    @extend %full-size;
+  }
   &__container {
     @include mix.min-size(100vw, 100vh);
   }
   &__main {
+    position: relative;
     @include mix.padding(0);
+    max-height: calc(100vh - 60px);
+    @include mix.respond-down(xs) {
+      max-height: calc(100vh - 50px);
+    }
   }
   &__header,
   &__footer,
@@ -131,6 +146,7 @@ onMounted(async() => {
     @include mix.container-style($p: lg, $r: 0);
   }
   &__header {
+    height: 60px;
     @include mix.padding(0);
     border-bottom: var(--border-base);
     @include anim.transition($p: height);

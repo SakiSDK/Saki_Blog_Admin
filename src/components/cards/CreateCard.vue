@@ -152,7 +152,7 @@ const resetForm = () => {
 .create-card { 
   width: 100%;
   &__container {
-    @include mix.container-style($r: md, $p: 0);
+    @include mix.container-style($r: md, $p: 0, $b: 1px solid var(--el-border-color));
   }
   &__body {
     @include mix.padding(lg);

@@ -77,7 +77,7 @@
   border-radius: radius-value($v);
 }
 @mixin radius-d($d, $v){
-  @if is-direction-base($d) {
+  @if is-direction-corner($d) {
     border-#{direction-corner-value($d)}-radius: radius-value($v);
   } @else {
     border-radius: radius-value($v);
