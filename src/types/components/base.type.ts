@@ -21,3 +21,14 @@ export interface MenuItem {
   children?: MenuItem[];
   badge?: number;
 }
+
+/** ---------- 通用组件CardHeader Props类型 ---------- */
+export interface CardHeaderProps {
+  title?: string;
+  subtitle?: string;
+  align?: 'left' | 'center' | 'right'; // 标题对齐
+  bordered?: boolean; // 是否展示底部分割线
+  padding?: string; // 自定义 padding
+  background?: string;
+  icon?: string;
+}

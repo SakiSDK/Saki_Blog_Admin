@@ -11,6 +11,9 @@ importers:
       '@vueuse/core':
         specifier: ^14.1.0
         version: 14.1.0(vue@3.5.24(typescript@5.9.3))
+      animejs:
+        specifier: ^4.2.2
+        version: 4.2.2
       axios:
         specifier: ^1.13.2
         version: 1.13.2
@@ -750,6 +753,9 @@ packages:
 
   alien-signals@3.1.0:
     resolution: {integrity: sha512-yufC6VpSy8tK3I0lO67pjumo5JvDQVQyr38+3OHqe6CHl1t2VZekKZ7EKKZSqk0cRmE7U7tfZbpXiKNzuc+ckg==}
+
+  animejs@4.2.2:
+    resolution: {integrity: sha512-Ys3RuvLdAeI14fsdKCQy7ytu4057QX6Bb7m4jwmfd6iKmUmLquTwk1ut0e4NtRQgCeq/s2Lv5+oMBjz6c7ZuIg==}
 
   ansis@4.2.0:
     resolution: {integrity: sha512-HqZ5rWlFjGiV0tDm3UxxgNRqsOTniqoKZu0pIAfh7TZQMGuZK+hH0drySty0si0QXj1ieop4+SkSfPZBPPkHig==}
@@ -2059,6 +2065,8 @@ snapshots:
   acorn@8.15.0: {}
 
   alien-signals@3.1.0: {}
+
+  animejs@4.2.2: {}
 
   ansis@4.2.0: {}
 

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useThemeStore } from '@/stores/theme.store';
 import VIcon from './VIcon.vue';
-import { computed, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import AvatarImg from '@/assets/imgs/avatar.webp'
 import { useStateStore } from '@/stores/state.store';
@@ -18,19 +18,31 @@ const topbarFields = ref([
     icon: 'bell',
     action: () => {
       console.log('点击了bell');
-    }
+    },
+    tip: {
+      title: '通知',
+      content: '点击查看通知'
+    } 
   },
   {
     icon: 'email',
     action: () => {
       console.log('点击了邮件');
-    }
+    },
+    tip: {
+      title: '邮箱',
+      content: '点击查看邮件'
+    } 
   },
   {
     icon: computed(()=>theme.value==='dark'?'moon':'sunny'),
     action: () => {
       themeStore.toggleTheme();
-    }
+    },
+    tip: {
+      title: computed(() => theme.value === 'dark' ? '浅色主题' : '深色主题'),
+      content: computed(() => theme.value === 'dark' ? '点击切换到浅色模式' : '点击切换到深色模式')
+    } 
   },
 ])
 </script>
@@ -45,26 +57,49 @@ const topbarFields = ref([
         <span class="topbar-sitename">
           博客管理
         </span>
-        <div class="topbar__item topbar__item-expand" @click="stateStore.toggleCollapsedAsideBar()">
-          <div 
-            class="topbar__expand"
-            :class="{
-              'topbar__expand--active': stateStore.isCollapsedAsideBar
-            }"
-          >
-            <div v-for="_ in 3"></div>
-          </div>
-        </div>
+        <el-popover 
+          width="50" 
+          title="折叠侧边栏" 
+          trigger="click" 
+          placement="bottom" 
+          popper-class="topbar__popover"
+        >
+          <template #default>
+            <div class="topbar__item-popover-content">
+              点击折叠侧边栏
+            </div>
+          </template>
+          <template #reference>
+            <div 
+              class="topbar__item topbar__item-expand" 
+              @click="stateStore.toggleCollapsedAsideBar()"
+              :class="{
+                'topbar__item-expand--active': stateStore.isCollapsedAsideBar
+              }"
+            >
+              <div v-for="_ in 3"></div>
+            </div>
+          </template>
+        </el-popover>
       </div>
       <div class="topbar__body">
-        <div 
-          class="topbar__item" 
-          v-for="field, index in topbarFields" 
-          :key="index" 
-          @click="field.action()"
+        <el-popover 
+          v-for="field,index in topbarFields"
+          :key="index"
+          width="50" 
+          :title="field.tip.title" 
+          trigger="hover" 
+          placement="bottom" 
         >
-          <VIcon :name="field.icon"/>
-        </div>
+          <div class="topbar__item-popover-content">
+            {{ field.tip.content || '提示内容' }}
+          </div>
+          <template #reference>
+            <div class="topbar__item" @click="field.action()">
+              <VIcon :name="field.icon" />
+            </div>
+          </template>
+        </el-popover>
         <div class="topbar__user">
           <div class="topbar__user-avatar">
             <img :src="AvatarImg" alt="user">
@@ -83,10 +118,17 @@ const topbarFields = ref([
     @extend %full-size;
     @include mix.flex-box($j: space-between);
     @include mix.container-style($p: 0 lg);
+    @include anim.transition($p: padding);
+    @include mix.respond-down(xs) {
+      @include mix.padding(0 sm);
+    }
   }
   &__header {
     @extend %flex-center;
     @include mix.gap(sm);
+    @include mix.respond-down(xs) {
+      @include mix.gap(xs);
+    }
   }
   &-logo {
     @extend %flex-center;
@@ -101,7 +143,7 @@ const topbarFields = ref([
     @include mix.font-style($s: xl, $f: title);
     @include anim.transition($p: font-size);
     @include mix.respond-down(xs){
-      @include mix.font-size(md);
+      @include mix.font-size(sm);
     }
   }
   &__body {
@@ -131,13 +173,41 @@ const topbarFields = ref([
       @include mix.size(25px);
       @include mix.font-style($s: sm);
     }
+    &-popover-content {
+      @include mix.font-style($c: var(--text-subtler))
+    }
     &-expand {
+      display: block;
+      @include mix.padding(5px);
       @include mix.margin-d(l, xxl);
+      @include anim.transition($p: margin transform);
+      @include mix.respond-down(xs) {
+        @include mix.margin-d(l, xs);
+      }
       &:hover {
-        .topbar__expand {
-          &>div {
-            background: var(--primary-base) !important;
-          }
+        &>div {
+          background-color: var(--primary-base);
+        }
+      }
+      &>div {
+        width: 100%;
+        height: 3px;
+        background: var(--text-subtle);
+        @include mix.margin-d(b, 4px);
+        @include anim.transition($p: width bg margin);
+        @include mix.respond-down(xs) {
+          @include mix.margin-d(b, 2px);
+        }
+      }
+      &--active {
+        &>div:nth-child(1) {
+          width: 90%;
+        }
+        &>div:nth-child(2) {
+          width: 70%;
+        }
+        &>div:nth-child(3) {
+          width: 50%;
         }
       }
     }
@@ -176,28 +246,6 @@ const topbarFields = ref([
       @include mix.respond-down(xs){
         @include mix.font-style($s: xs);
       }
-    }
-  }
-  &__expand { 
-    @include mix.size(15px);
-    @include mix.flex-box($d: column, $j: center, $a: flex-start, $g: xxs);
-    &>div {
-      width: 100%;
-      height: 3px;
-      background: var(--text-subtler);
-      @include anim.transition($p: width bg);
-    }
-    &--active {
-      &>div:nth-child(1) {
-        width: 100%;
-      }
-      &>div:nth-child(2) {
-        width: 70%;
-      }
-      &>div:nth-child(3) {
-        width: 40%;
-      }
-
     }
   }
 }

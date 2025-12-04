@@ -1,0 +1,1 @@
+export type { TagFormType } from './tag.type';
