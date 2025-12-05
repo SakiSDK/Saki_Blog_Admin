@@ -98,7 +98,6 @@ const resetForm = () => {
   // 重置为初始数据
   Object.assign(form, { ...props.initialForm });
 };
-
 </script>
 
 <template>

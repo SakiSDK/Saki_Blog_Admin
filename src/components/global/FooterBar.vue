@@ -24,20 +24,22 @@
 <style lang="scss" scoped>
 .footer {
   @extend %full-size;
+  &__container,
+  &__content {
+    @include mix.respond-down(xs) {
+      flex-direction: column;
+    }
+  }
   &__container {
     @extend %full-size;
     @include mix.flex-box($j: space-between, $g: xxs);
     @include mix.respond-down(xs) {
-      flex-direction: column;
       justify-content: center;
     }
   }
   &__content {
     @extend %flex-center;
     @include mix.gap(xs);
-    @include mix.respond-down(xs) {
-      flex-direction: column;
-    }
   }
   &-copyright,
   &-illustration,

@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { useDomUtil } from '@/utils/dom.util';
+import { useEventListener } from '@vueuse/core';
 
 export const useStateStore = defineStore('state', () => { 
   /** ---------- AsideBar展开状态 ---------- */
@@ -11,9 +12,15 @@ export const useStateStore = defineStore('state', () => {
     isCollapsedAsideBar.value = !isCollapsedAsideBar.value;
   }
   if (respondDown('xs')) {
-    console.log('xxxx')
     isCollapsedAsideBar.value = true;
   }
+  useEventListener(window, 'resize', () => {
+    if (respondDown('xs')) {
+      isCollapsedAsideBar.value = true;
+    } else {
+      isCollapsedAsideBar.value = false;
+    }
+  })
 
   /** ---------- 页面是是否正在加载 ---------- */
   const isGlobalLoading = ref<boolean>(false);

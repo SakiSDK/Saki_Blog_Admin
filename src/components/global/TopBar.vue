@@ -112,10 +112,12 @@ const topbarFields = ref([
 </template>
 
 <style lang="scss" scoped>
-.topbar {
+.topbar,
+.topbar__container {
   @extend %full-size;
+}
+.topbar {
   &__container {
-    @extend %full-size;
     @include mix.flex-box($j: space-between);
     @include mix.container-style($p: 0 lg);
     @include anim.transition($p: padding);
@@ -123,15 +125,20 @@ const topbarFields = ref([
       @include mix.padding(0 sm);
     }
   }
-  &__header {
+  &__header,
+  &-logo,
+  &__body,
+  &__item,
+  &__user {
     @extend %flex-center;
+  }
+  &__header {
     @include mix.gap(sm);
     @include mix.respond-down(xs) {
       @include mix.gap(xs);
     }
   }
   &-logo {
-    @extend %flex-center;
     @include mix.container-style($p: xs, $bg: var(--primary-base));
     @include mix.font-style($s: xxl, $c: var(--white-base));
     @include anim.transition($p: font-size);
@@ -147,7 +154,6 @@ const topbarFields = ref([
     }
   }
   &__body {
-    @extend %flex-center;
     @include mix.gap(sm);
   }
   &__item,
@@ -155,7 +161,6 @@ const topbarFields = ref([
     @include mix.size(30px);
   }
   &__item {
-    @extend %flex-center;
     @include mix.font-style($s: md, $c: var(--text-subtle));
     @include mix.container-style(
       $p: 0, 
@@ -178,7 +183,7 @@ const topbarFields = ref([
     }
     &-expand {
       display: block;
-      @include mix.padding(5px);
+      @include mix.padding(xs);
       @include mix.margin-d(l, xxl);
       @include anim.transition($p: margin transform);
       @include mix.respond-down(xs) {
@@ -190,8 +195,7 @@ const topbarFields = ref([
         }
       }
       &>div {
-        width: 100%;
-        height: 3px;
+        @include mix.size(100%, 3px);
         background: var(--text-subtle);
         @include mix.margin-d(b, 4px);
         @include anim.transition($p: width bg margin);
@@ -200,21 +204,17 @@ const topbarFields = ref([
         }
       }
       &--active {
-        &>div:nth-child(1) {
-          width: 90%;
-        }
-        &>div:nth-child(2) {
-          width: 70%;
-        }
-        &>div:nth-child(3) {
-          width: 50%;
+        $indexes: ( 1, 2, 3);
+        @each $i in $indexes {
+          &>div:nth-child(#{$i}) {
+            width: 90% - 20% * ($i - 1);
+          }
         }
       }
     }
   }
   &__user {
     height: 40px;
-    @extend %flex-center;
     @include mix.gap(sm);
     @include mix.container-style(
       $p: 0 sm, 

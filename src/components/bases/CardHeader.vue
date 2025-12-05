@@ -29,6 +29,7 @@ const headerClass = computed(() => ({
         '--card-header-background': background
       }"
     >
+    <div class="card-header__wrapper">
       <div class="card-header-icon">
         <slot name="icon">
           <VIcon v-if="icon" :name="icon" />
@@ -42,6 +43,7 @@ const headerClass = computed(() => ({
           <p v-if="subtitle" class="subtitle">{{ subtitle }}</p>
         </slot>
       </div>
+    </div>
       <!-- 右侧操作区（按钮等） -->
       <div class="card-header-actions">
         <slot name="actions"></slot>
@@ -74,26 +76,46 @@ const headerClass = computed(() => ({
     );
     @include mix.flex-box($j: flex-start, $g: lg);
   }
-
+  &__wrapper {
+    @extend %flex-center;
+  }
   &-title {
     @include mix.flex-box($d: column, $a: flex-start, $g: sm);
+    @include mix.margin-d(l, lg);
+    @include anim.transition($p: margin);
+    @include mix.respond-down(xs){
+      @include mix.margin-d(l, sm);
+    }
+    h3,
+    .subtitle {
+      margin: 0;
+    }
     h3 {
       @include mix.font-style($s: lg, $w: 600, $f: 'title');
-      margin: 0;
+      @include anim.transition($p: font-size);
+      @include mix.respond-down(xs){
+        @include mix.font-size(md);
+      }
     }
     .subtitle {
       @include mix.font-style($s: sm, $c: var(--text-subtler));
-      margin: 0;
     }
   }
   &-actions {
     @include mix.flex-box($a: center, $j: flex-start, $g: sm);
+    @include mix.position-style($p: absolute, $r: sm, $t: sm);
   }
   &-icon {
     @include mix.size(30px);
-    @include mix.flex-box($s: 0);
+    @extend %flex-center;
+    flex-shrink: 0;
     @include mix.container-style($p: 0, $bg: var(--primary-base), $r: sm);
     @include mix.font-style($s: xl, $c: var(--white-base));
+    @include anim.transition($p: width height font-size);
+    @include mix.respond-down(xs) {
+      @include mix.size(25px);
+      @include mix.font-size(md);
+    }
   }
 }
 </style>

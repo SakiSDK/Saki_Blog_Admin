@@ -1,5 +1,10 @@
 <script lang="ts" setup>
+import { ElMessage } from 'element-plus';
 import CardHeader from '../bases/CardHeader.vue';
+import VIcon from '../global/VIcon.vue';
+import { onMounted, ref } from 'vue';
+import { useDomUtil } from '@/utils/dom.util';
+import { useEventListener } from '@vueuse/core';
 
 // 定义标签类型接口
 interface TagItem {
@@ -52,7 +57,16 @@ interface tableColumnField {
   componentProps?: Record<string, any>;
 }
 
+const headerBtnSize = ref<'default' | 'small'>('default');
 const tableColumnFields: tableColumnField[] = [
+  {
+    label: '标签ID',
+    prop: 'id',
+    component: 'el-input-number',
+    componentProps: {
+      placeholder: '请输入标签ID',
+    },
+  },
   {
     label: '标签名称',
     prop: 'name',
@@ -113,73 +127,216 @@ const tableColumnFields: tableColumnField[] = [
     },
   }
 ]
+
+const handleEdit = (row: TagItem) => {
+  console.log(row);
+};
+// 删除标签
+const handleDelete = (id: number) => {
+  // 执行删除逻辑（如接口请求/数据过滤）
+  ElMessage.success('标签删除成功');
+};
+
+// 取消删除
+const handleCancelDelete = () => {
+  ElMessage.info('已取消删除操作');
+};
+// 切换标签启用/禁用状态
+const handleToggleStatus = (row: TagItem) => {
+  row.status = !row.status;
+  ElMessage.success(`标签已${row.status ? '启用' : '禁用'}`);
+};
+const handleBulkDelete = () => {
+  ElMessage.success('批量删除成功');
+};
+const handleRefresh = () => {
+  ElMessage.success('刷新成功');
+};
+onMounted(() => {
+  const domUtil = useDomUtil();
+  useEventListener(window, 'resize', () => {
+    domUtil.respondDown('xs',()=> {
+      headerBtnSize.value='small'
+    })
+    domUtil.respondUp('xs',() => {
+      headerBtnSize.value='default'
+    })
+  })
+})
 </script>
 
 <template>
   <div class="tag-list">
     <div class="tag-list__container">
-      <CardHeader icon="list" title="标签列表"/>
+      <CardHeader icon="list" title="标签列表">
+        <template #actions>
+          <div class="tag-list-header__options">
+            <div class="tag-list-header__options-btn">
+              <el-button type="danger" :size="headerBtnSize" @click="handleBulkDelete">
+                <span class="tag-list-header__options-icon">
+                  <VIcon name="trush"/>
+                </span>
+                批量删除
+              </el-button>
+            </div>
+            <div class="tag-list-header__options-btn">
+              <el-button type="info" :size="headerBtnSize" @click="handleRefresh">
+                <span class="tag-list-header__options-icon">
+                  <VIcon name="refresh"/>
+                </span>
+                刷新
+              </el-button>
+            </div>
+          </div>
+        </template>
+      </CardHeader>
       <div class="tag-list__body">
         <el-table
           :data="tags"
           style="width: 100%"
+          
         >
           <el-table-column 
             v-for="field in tableColumnFields" 
             :key="field.prop"
             :label="field.label"
             :prop="field.prop"
+            align="center"
           >
+            <template #default="scope" v-if="field.prop==='name'">
+              <el-tag type="">{{ scope.row[field.prop] }}</el-tag>
+            </template>
           </el-table-column>
-
+          <el-table-column 
+            label="操作" 
+            align="center"
+          >
+            <template #default="scope">
+              <div class="tag-list__options">
+                <!-- 编辑按钮 -->
+                <el-tooltip 
+                  content="编辑标签" 
+                  placement="bottom"
+                >
+                  <el-icon 
+                    class="tag-list__icon tag-list__icon--edit" 
+                    @click.stop="handleEdit(scope.row)"
+                  >
+                    <VIcon name="edit"/>
+                  </el-icon>
+                </el-tooltip>
+                <!-- 删除按钮（带确认弹窗） -->
+                <el-popconfirm
+                  title="确定删除该标签吗？"
+                  confirm-button-text="确认"
+                  cancel-button-text="取消"
+                  trigger="hover"
+                  @confirm="handleDelete(scope.row.id)"
+                  @cancel="handleCancelDelete"
+                >
+                  <template #reference>
+                    <el-icon 
+                      class="tag-list__icon tag-list__icon--delete" 
+                    >
+                      <VIcon name="trush"/>
+                    </el-icon>
+                  </template>
+                </el-popconfirm>
+                <!-- 启用/禁用按钮（根据状态切换图标和提示） -->
+                <el-tooltip 
+                  :content="scope.row.active ? '禁用标签' : '启用标签'" 
+                  placement="bottom"
+                >
+                  <el-icon 
+                    class="tag-list__icon" 
+                    :class="{
+                      'tag-list__icon--enable': scope.row.active,
+                      'tag-list__icon--disable': !scope.row.active
+                    }"
+                    @click.stop="handleToggleStatus(scope.row)"
+                  >
+                    <VIcon :name="scope.row.active ? 'pause' : 'play'"/>
+                  </el-icon>
+                </el-tooltip>
+              </div>
+            </template>
+          </el-table-column>
         </el-table>
+        <div class="tag-list__pagination">
+          <el-pagination background layout="prev, pager, next, jumper" :total="1000" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+:deep(.el-pager li) {
+  @include anim.transition($p: bg transform color);
+  @include hov.bg(var(--primary-weak));
+  @include hov.move-y;
+  @include hov.color(var(--primary-base));
+}
+:deep(.el-pagination.is-background .el-pager li.is-active) {
+  background-color: var(--primary-base);
+}
+:deep(.el-tag){
+  @include anim.transition($p: color bg border-color);
+}
+:deep(.el-tag.el-tag--primary) {
+  --el-tag-text-color: var(--primary-base);
+  --el-tag-bg-color: var(--primary-transparent);
+  --el-tag-border-color: var(--primary-weak);
+}
 :deep(.el-table) {
   @include mix.radius(md);
+  .cell {
+    position: relative;
+    @include mix.z-index(base);
+  }
   tr {
     background: var(--surface-base);
     &:hover>td.el-table__cell {
       background-color: var(--bg-base);
-      &:first-child {
-        border-left: var(--el-table-border);
-        @include mix.radius-d(bl, md);
-        @include mix.radius-d(tl, md);
-        &::before {
-          background-color: var(--surface-base);
-        }
-      }
+      &:first-child,
       &:last-child {
-        border-right: var(--el-table-border);
-        @include mix.radius-d(br, md);
-        @include mix.radius-d(tr, md);
+        border-color: transparent;
+        &::before {
+          border-color: var(--el-table-border-color);
+        }
         &::after {
           background-color: var(--surface-base);
         }
+      }
+      &:first-child,
+      &:first-child::before {
+        @include mix.radius-d(bl, md);
+        @include mix.radius-d(tl, md);
+      }
+      &:last-child,
+      &:last-child::before {
+        @include mix.radius-d(br, md);
+        @include mix.radius-d(tr, md);
       }
     }
   }
   .el-table__cell {
     @include anim.transition($p: bg border-color border-radius, $dr: 'slow');
-    &:first-child {
-      border-left: 1px solid transparent;
+    &:first-child,
+    &:last-child {
+      position: relative;
       &::before {
         content: '';
-        width: 100%;
-        height: 1px;
-        @include mix.position-style($p: absolute, $t: -1px, $l: 0);
+        @extend %full-size;
+        @include mix.position-style($p: absolute, $t: -1px, $l: 0, $z: 1);
+        box-sizing: content-box;
+        border: 1px solid transparent;
+        border-right: none;
+        border-left: none;
       }
-    }
-    &:last-child {
-      border-right: 1px solid transparent;
       &::after {
         content: '';
-        width: 100%;
-        height: 1px;
+        @include mix.size(100%, 1px);
         @include mix.position-style($p: absolute, $t: -1px, $r: 0);
       }
     }
@@ -187,11 +344,38 @@ const tableColumnFields: tableColumnField[] = [
 }
 .tag-list {
   width: 100%;
+  &-header__options {
+    @extend %flex-center;
+    @include mix.gap(sm);
+    &-btn {
+      @include anim.transition($p: transform);
+      @include hov.move-y;
+    }
+    &-icon {
+      @include mix.margin-d(r, xs);
+    }
+  }
   &__container {
     @include mix.container-style($p: 0, $r: md, $b: 1px solid var(--el-border-color), $o: hidden);
   }
   &__body {
     @include mix.padding(lg);
+  }
+  &__options {
+    height: 100%;
+    @extend %flex-center;
+    @include mix.gap(xxs);
+  }
+  &__icon {
+    flex-shrink: 0;
+    @include mix.size(25px);
+    @include mix.container-style($p: 0, $bg: var(--interactive-base), $r: sm, $b: var(--el-table-border));
+    @include anim.transition($p: bg transform);
+    @include hov.move-y;
+  }
+  &__pagination {
+    @extend %flex-center;
+    @include mix.margin-d(t, lg);
   }
 }
 </style>

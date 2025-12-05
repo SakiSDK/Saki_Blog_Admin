@@ -146,12 +146,6 @@ watch(() => navigator.route?.path, (newPath) => {
                 <VIcon :name="item.icon"/>
               </el-icon>
               <span>{{ item.label }}</span>
-              <!-- <el-badge
-                v-if="item.badge && item.badge > 0" 
-                :value="item.badge" 
-                :max="99" 
-                class="menu-badge"
-              /> -->
             </template>
             <!-- 子菜单项 -->
             <el-menu-item 
@@ -168,12 +162,6 @@ watch(() => navigator.route?.path, (newPath) => {
               </el-icon>
               <template #title>
                 <span>{{ child.label }}</span>
-                <!-- <el-badge 
-                  v-if="child.badge && child.badge > 0" 
-                  :value="child.badge" 
-                  :max="99" 
-                  class="menu-badge"
-                /> -->
               </template>
             </el-menu-item>
           </el-sub-menu>
@@ -190,12 +178,6 @@ watch(() => navigator.route?.path, (newPath) => {
             </el-icon>
             <template #title>
               <span>{{ item.label }}</span>
-              <!-- <el-badge 
-                v-if="item.badge && item.badge > 0" 
-                :value="item.badge" 
-                :max="99" 
-                class="menu-badge"
-              /> -->
             </template>
           </el-menu-item>
         </template>
@@ -228,12 +210,6 @@ watch(() => navigator.route?.path, (newPath) => {
             </el-icon>
             <template #title>
               <span>{{ child.label }}</span>
-              <!-- <el-badge 
-                v-if="child.badge && child.badge > 0" 
-                :value="child.badge" 
-                :max="99" 
-                class="menu-badge"
-              /> -->
             </template>
           </el-menu-item>
         </el-sub-menu>
@@ -243,6 +219,20 @@ watch(() => navigator.route?.path, (newPath) => {
 </template>
 
 <style lang="scss" scoped>
+:deep(.el-menu) {
+  .el-menu-item {
+    .el-icon,
+    &>span {
+      @include anim.transition($p: transform);
+    }
+    &:active {
+      .el-icon,
+      &>span {
+        transform: translateX(-7px);
+      }
+    }
+  }
+}
 .aside {
   @extend %full-size;
   &__container {
@@ -268,6 +258,10 @@ watch(() => navigator.route?.path, (newPath) => {
         border-color: var(--primary-base);
         background: var(--primary-transparent);
         color: var(--primary-base);
+        :deep(.el-icon),
+        &>span {
+          transform: translateX(-10px);
+        }
       }
     }
   }

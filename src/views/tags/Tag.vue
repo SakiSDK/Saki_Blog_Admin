@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import TagCreateCard from '@/components/tags/TagCreateCard.vue';
 import TagListCard from '@/components/tags/TagListCard.vue';
+import TagSearchCard from '@/components/tags/TagSearchCard.vue';
 
 </script>
 
@@ -8,6 +9,7 @@ import TagListCard from '@/components/tags/TagListCard.vue';
   <div class="tag">
     <div class="tag__container">
       <TagCreateCard/>
+      <TagSearchCard/>
       <TagListCard/>
     </div>
   </div>

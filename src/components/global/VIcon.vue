@@ -42,8 +42,7 @@ const iconStyle = computed<CSSProperties>(() => {
 <style lang="scss" scoped>
 /* 基础样式 (与你提供的通用 CSS 一致) */
 .icon {
-  width: 1em;
-  height: 1em;
+  @include mix.size(1em);
   vertical-align: -0.15em;
   fill: currentColor;
   overflow: hidden;
