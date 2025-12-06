@@ -4,40 +4,11 @@ import { reactive, ref, type UnwrapRef } from 'vue'
 import { ElForm, ElFormItem, type FormInstance, type FormRules } from 'element-plus';
 import { zodValidator } from '@/utils/validate.util';
 import { z } from 'zod';
+import type { CreateCardProps } from '@/types/components/base.type';
 
 
-export type FormFieldConfig<T = any> = {
-  label: string;
-  prop: keyof T & string;
-  component: any; // 支持任意 Element Plus 表单组件
-  componentProps?: Record<string, any>; // 组件透传属性
-  hidden?: boolean; // 是否隐藏字段
-};
-// 定义组件 Props 类型
-type CreateCardProps<T = any> = {
-  /** 卡片标题 */
-  title: string;
-  /** 卡片图标 */
-  icon: string;
-  /** 提交按钮文本 */
-  submitText: string;
-  /** 重置按钮文本 */
-  resetText: string;
-  /** 表单初始数据 */
-  initialForm: T;
-  /** Zod 表单校验 Schema */
-  formSchema: z.ZodObject<z.ZodRawShape>;
-  /** 表单字段配置 */
-  formFields: FormFieldConfig<T>[];
-  /** 提交回调函数 */
-  onSubmit: (formData: UnwrapRef<T>) => Promise<void> | void;
-  /** 可选：自定义表单校验规则（优先级高于 Zod 自动生成） */
-  customRules?: FormRules;
-  /** 可选：标签宽度 */
-  labelWidth?: string;
-  /** 可选：标签位置（top/left） */
-  labelPosition?: 'top' | 'left';
-};
+
+
 // 定义 Props 并设置默认值
 const props = withDefaults(defineProps<CreateCardProps>(), {
   title: '通用表单',

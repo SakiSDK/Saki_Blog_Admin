@@ -1,3 +1,14 @@
+import type { FormRules } from 'element-plus';
+import type { UnwrapRef } from 'vue';
+import { z } from 'zod';
+
+export interface Pagination {
+  total?: number;         // 数据总数
+  currentPage?: number;   // 当前页码
+  pageSize?: number;      // 每页显示条数
+  pageTotals?: number;    // 总页数
+}
+
 /** ---------- Icon组件Props类型 ---------- */
 export interface IconProps {
   // 图标名称 (对应 symbol 的 id: #icon-xxx)
@@ -31,4 +42,93 @@ export interface CardHeaderProps {
   padding?: string; // 自定义 padding
   background?: string;
   icon?: string;
+}
+
+
+/** ---------- 通用组件CreateCard ---------- */
+export type FormFieldConfig<T = any> = {
+  label: string;
+  prop: keyof T & string;
+  component: any; // 支持任意 Element Plus 表单组件
+  componentProps?: Record<string, any>; // 组件透传属性
+  hidden?: boolean; // 是否隐藏字段
+};
+// 定义组件 Props 类型
+export type CreateCardProps<T = any> = {
+  /** 卡片标题 */
+  title: string;
+  /** 卡片图标 */
+  icon: string;
+  /** 提交按钮文本 */
+  submitText: string;
+  /** 重置按钮文本 */
+  resetText: string;
+  /** 表单初始数据 */
+  initialForm: T;
+  /** Zod 表单校验 Schema */
+  formSchema: z.ZodObject<z.ZodRawShape>;
+  /** 表单字段配置 */
+  formFields: FormFieldConfig<T>[];
+  /** 提交回调函数 */
+  onSubmit: (formData: UnwrapRef<T>) => Promise<void> | void;
+  /** 可选：自定义表单校验规则（优先级高于 Zod 自动生成） */
+  customRules?: FormRules;
+  /** 可选：标签宽度 */
+  labelWidth?: string;
+  /** 可选：标签位置（top/left） */
+  labelPosition?: 'top' | 'left';
+};
+
+/** ---------- 通用组件ListCard ---------- */
+// 通用类型
+export interface ListItem {
+  id: number | string;
+  [key: string]: any;
+}
+// 列表项类型
+export interface TableColumnField {
+  label: string;
+  prop: string;
+  width?: string | number;
+  component?: string;
+  componentProps?: Record<string, any>;
+  render?: (item: ListItem) => string; // 自定义渲染函数
+}
+// 定义Props
+export interface ListCardProps {
+  title: string; // 列表标题
+  data: ListItem[]; // 列表数据
+  columns: TableColumnField[];
+  selectedRows: ListItem[];
+  icon?: string; // 图标名称
+  showSelection?: boolean; // 是否显示多选框
+  showPagination?: boolean; // 是否显示分页器
+  total?: number;
+  pageSize?: number;
+  currentPage?: number;
+  pageTotals?: number;
+  showActionColumn?: boolean; // 是否显示操作列
+  actionColumnConfig?: {
+    label?: string;
+    width?: string | number;
+    // 操作按钮配置
+    actions?: Array<{
+      name: string;
+      icon: string;
+      tooltip: string;
+      confirm?: boolean; // 是否需要确认
+      confirmText?: string;
+      disabled?: (row: ListItem) => boolean;
+      handler: (row: ListItem) => void;
+    }>;
+  };
+  // 头部操作按钮
+  headerActions?: Array<{
+    name: string;
+    icon: string;
+    type?: 'primary' | 'success' | 'warning' | 'danger' | 'info';
+    size?: 'default' | 'small';
+    disabled?: boolean;
+    handler: () => void;
+  }>;
 }
