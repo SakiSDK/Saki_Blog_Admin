@@ -1,26 +1,24 @@
 <script lang="ts" setup>
-import CardHeader from '../bases/CardHeader.vue';
-import { reactive, ref } from 'vue'
 import { ElForm, ElFormItem, type FormInstance, type FormRules } from 'element-plus';
+import CardHeader from '../bases/CardHeader.vue';
+import { reactive, ref } from 'vue';
+import type z from 'zod';
+import type { FormFieldConfig, SearchCardProps } from '@/types/components/base.type';
 import { zodValidator } from '@/utils/validate.util';
-import { z } from 'zod';
-import type { CreateCardProps } from '@/types/components/base.type';
 
 
 
-
-// 定义 Props 并设置默认值
-const props = withDefaults(defineProps<CreateCardProps>(), {
+/** ---------- props ---------- */
+const props = withDefaults(defineProps<SearchCardProps>(), {
   title: '通用表单',
   icon: 'form',
   submitText: '提交',
   resetText: '重置',
   labelWidth: '80px',
-  labelPosition: 'top'
-});
+  labelPosition: 'top',
+})
 
-
-/** ---------- 表单核心逻辑 ---------- */
+/** ---------- 表单逻辑 ---------- */
 // 初始化表单数据（深拷贝避免修改原数据）
 const form = reactive({ ...props.initialForm });
 // 表单引用
@@ -47,7 +45,6 @@ const generateRules = (): FormRules => {
   return rules;
 };
 const rules = generateRules() satisfies FormRules;
-
 // 提交表单（调用外部传入的回调）
 const handleSubmit = async () => {
   if (!formRef.value) return;
@@ -72,32 +69,63 @@ const resetForm = () => {
 </script>
 
 <template>
-  <div class="create-card">
-    <div class="create-card__container">
-      <CardHeader :icon="icon" :title="title"/>
-      <div class="create-card__body">
+  <div class="search-card">
+    <div class="search-card__container">
+      <CardHeader :icon="icon" :title="title" />
+      <div class="search-card__body">
         <el-form 
-          ref="formRef" 
+          ref="formRef"
+          class="search-card__form" 
           :model="form" 
           :rules="rules" 
-          :label-width="labelWidth"
           :label-position="labelPosition"
-          class="create-card__form"
+          :label-width="labelWidth"
         >
           <template v-for="field in formFields">
             <el-form-item
               :label="field.label"
               :prop="String(field.prop)"
+              class="search-card__form-item"
             >
               <template #label>
-                <div class="create-card__label">
+                <div class="search-card__label">
                   <el-icon class="create-card__label-icon"> 
                     <VIcon :name="field.icon"/>
                   </el-icon>
-                  <span class="create-card__label-text">{{ field.label }}</span>
+                  <span class="search-card__label-text">{{ field.label }}</span>
                 </div>
               </template>
+              <div 
+                v-if="field.children" 
+                class="search-card__group" 
+                :style="{
+                  '--connector': `${field.connector || '-'}`
+                }"
+              >
+                <template v-for="child,index in field.children" :key="child.prop">
+                  <el-form-item
+                    :prop="String(child.prop)"
+                    class="search-card__form-group-item"
+                  >
+                    <!-- 子字段组件 -->
+                    <component 
+                      :is="child.component"
+                      v-bind="child.componentProps"
+                      v-model="form[child.prop]"
+                      class="search-card__child-component"
+                    />
+                  </el-form-item>
+                  <!-- 分隔符（如 -） -->
+                  <span 
+                    v-if="index < field.children.length - 1 && field.connector"
+                    class="search-card__connector"
+                  >
+                    {{ field.connector }}
+                  </span>
+                </template>
+              </div>
               <component 
+                v-else
                 :is="field.component"
                 v-bind="field.componentProps"
                 v-model="form[field.prop]"
@@ -107,14 +135,14 @@ const resetForm = () => {
           <!-- 操作按钮 -->
           <el-form-item class="form-actions" label-width="0">
             <el-button 
-              class="create-card__btn create-card__btn-submit" 
+              class="search-card__btn search-card__btn-submit" 
               type="primary" 
               @click="handleSubmit"
             >
               {{ submitText }}
             </el-button>
             <el-button 
-              class="create-card__btn create-card__btn-reset" 
+              class="search-card__btn search-card__btn-reset" 
               @click="resetForm"
             >
               {{ resetText }}
@@ -127,13 +155,40 @@ const resetForm = () => {
 </template>
 
 <style lang="scss" scoped>
-.create-card { 
+:deep(.el-date-editor.el-input) {
+  width: 100%;
+}
+.search-card {
   width: 100%;
   &__container {
-    @include mix.container-style($r: md, $p: 0, $b: 1px solid var(--el-border-color));
+    @include mix.container-style($p: 0);
   }
   &__body {
     @include mix.padding(lg);
+  }
+  // 表单样式优化
+  &__form {
+    width: 100%;
+    @include mix.grid-box($c: 2, $rg: sm, $cg: lg);
+    @include mix.respond-down(md) {
+      @include mix.flex-box($d: column);
+    }
+    &-item {
+      width: 100%;
+    }
+    // 操作按钮区域
+    &__actions {
+      padding-left: 8px; // 对齐标签宽度
+    }
+  }
+  &__group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+  &__label {
+    @extend %flex-center;
+    @include mix.gap(xs);
   }
   &__btn{
     @include anim.transition($p: transform bg border-color);
@@ -151,9 +206,8 @@ const resetForm = () => {
       @include hov.bg(var(--primary-transparent));
     }
   }
-  &__label {
-    @extend %flex-center;
-    @include mix.gap(xs);
+  &__connector {
+    @include mix.margin-x(sm);
   }
 }
 </style>

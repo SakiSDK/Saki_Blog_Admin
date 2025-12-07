@@ -15,6 +15,7 @@ const initialForm: TagFormType = {
 const tagFormFields = [
   {
     label: '标签名称',
+    icon: 'tag',
     prop: 'name',
     component: ElInput,
     componentProps: {
@@ -25,6 +26,7 @@ const tagFormFields = [
   },
   {
     label: '标签描述',
+    icon: 'description',
     prop: 'description',
     component: ElInput,
     componentProps: {
@@ -36,7 +38,8 @@ const tagFormFields = [
     }
   },
   {
-    label: '排序',
+    label: '优先级',
+    icon: 'sort',
     prop: 'order',
     component: ElInputNumber,
     componentProps: {

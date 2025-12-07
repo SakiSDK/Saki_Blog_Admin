@@ -18,6 +18,17 @@ export const tagFormSchema = z.object({
     .default(0)
     .optional(),
 })
+export const tagSearchFormSchema = z.object({
+  keyword: zStr
+    .max(50, { message: '标签名称不能超过50个字符' })
+    .trim()
+    .optional(),
+  status: z.enum(['active', 'inactive'], {message: '只能选择激活或者未激活'}).nullable().optional(),
+  order: z.enum(['asc', 'desc']).optional(),
+  startTime: z.date().optional(),
+  endTime: z.date().optional(),
+})
 
 
 export type TagFormType = z.infer<typeof tagFormSchema>;
+export type TagSearchFormType = z.infer<typeof tagSearchFormSchema>;

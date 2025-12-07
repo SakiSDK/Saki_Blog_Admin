@@ -44,15 +44,19 @@ export interface CardHeaderProps {
   icon?: string;
 }
 
-
-/** ---------- 通用组件CreateCard ---------- */
+/** ---------- 通用表单Config ---------- */
 export type FormFieldConfig<T = any> = {
   label: string;
+  icon?: string;
   prop: keyof T & string;
   component: any; // 支持任意 Element Plus 表单组件
   componentProps?: Record<string, any>; // 组件透传属性
   hidden?: boolean; // 是否隐藏字段
+  connector?: string;
+  children?: Omit<FormFieldConfig<T>, 'children'>[];
 };
+
+/** ---------- 通用组件CreateCard ---------- */
 // 定义组件 Props 类型
 export type CreateCardProps<T = any> = {
   /** 卡片标题 */
@@ -78,6 +82,23 @@ export type CreateCardProps<T = any> = {
   /** 可选：标签位置（top/left） */
   labelPosition?: 'top' | 'left';
 };
+
+
+/** ---------- 通用组件SearchCard ---------- */
+export interface SearchCardProps<T = any> {
+  title: string;
+  icon: string;
+  submitText: string;
+  resetText: string;
+  labelWidth: string;
+  labelPosition: 'top' | 'left' | 'right';
+  initialForm: T;
+  formSchema: z.ZodObject<z.ZodRawShape>;
+  formFields: FormFieldConfig[];
+  onSubmit: (formData: UnwrapRef<T>) => Promise<void> | void;
+  customRules?: FormRules;
+}
+
 
 /** ---------- 通用组件ListCard ---------- */
 // 通用类型

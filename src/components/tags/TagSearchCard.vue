@@ -1,253 +1,134 @@
 <script lang="ts" setup>
-import { ref, reactive, onMounted } from 'vue';
-import CardHeader from '../bases/CardHeader.vue';
-import type { FormInstance, FormRules } from 'element-plus';
-import { ElMessage } from 'element-plus';
+import { ElDatePicker, ElInput, ElMessage, ElSelect } from 'element-plus';
+import SearchCard from '../cards/SearchCard.vue';
+import type { FormFieldConfig } from '@/types/components/base.type';
+import { tagSearchFormSchema } from '@/schemas/tag.schema';
+import type { TagSearchFormType } from '@/types/schemas/tag.type';
 
-// 表单 Ref
-const formRef = ref<FormInstance>()
-
-// 定义搜索表单类型
-interface TagSearchForm {
-  keyword: string; // 关键词（名称/描述）
-  category: string; // 分类
-  status: string; // 状态（启用/禁用）
-  dateRange: [string, string] | []; // 创建时间范围
-}
-
-// 搜索表单默认值
-const searchForm = reactive<TagSearchForm>({
+const initialFrom = {
   keyword: '',
-  category: '',
   status: '',
-  dateRange: []
-});
-
-// 表单验证规则
-const searchRules = reactive<FormRules>({
-  // 可根据需求添加验证，比如关键词长度限制
-  keyword: [
-    { max: 50, message: '关键词长度不能超过50个字符', trigger: 'blur' }
-  ]
-});
-
-// 分类选项（可从接口获取，这里模拟）
-const categoryOptions = ref([
-  { label: '全部分类', value: '' },
-  { label: '技术', value: '技术' },
-  { label: '设计', value: '设计' },
-  { label: '营销', value: '营销' },
-  { label: '业务', value: '业务' },
-  { label: '生活', value: '生活' },
-  { label: '其他', value: '其他' }
-]);
-
-// 状态选项
-const statusOptions = ref([
-  { label: '全部状态', value: '' },
-  { label: '启用', value: 'active' },
-  { label: '禁用', value: 'inactive' }
-]);
-
-/**
- * 提交搜索
- */
-const handleSearch = () => {
-  if (!formRef.value) return;
-  
-  // 表单验证
-  formRef.value.validate((valid) => {
-    if (valid) {
-      // 格式化搜索参数（可根据后端需求调整）
-      const searchParams = {
-        keyword: searchForm.keyword.trim(),
-        category: searchForm.category,
-        status: searchForm.status,
-        startTime: searchForm.dateRange[0] || '',
-        endTime: searchForm.dateRange[1] || ''
-      };
-      
-      // 触发搜索逻辑（示例：可通过 emit 传递给父组件）
-      console.log('搜索参数：', searchParams);
-      ElMessage.success('搜索条件已提交');
-      
-      // 实际项目中可调用接口/触发父组件的搜索事件
-      // emit('search', searchParams);
-    } else {
-      ElMessage.error('表单验证失败，请检查输入内容');
+  timeRange: [],
+}
+// 定义表单字段配置
+const tagFormFields: FormFieldConfig[] = [
+  {
+    label: '关键词',
+    prop: 'keyword',
+    icon: 'keyword',
+    component: ElInput,
+    componentProps: {
+      placeholder: '请输入关键词',
+      maxLength: 20,
+      clearable: true,
     }
-  });
+  },
+  {
+    label: '状态',
+    prop: 'status',
+    icon: 'switch',
+    component: ElSelect,
+    componentProps: {
+      placeholder: '请选择状态',
+      clearable: true,
+      options: [
+        {
+          label: '激活',
+          value: 'active'
+        },
+        {
+          label: '未激活',
+          value: 'inactive'
+        }
+      ]
+    }
+  },
+  {
+    label: '时间',
+    icon: 'time',
+    prop: 'timeRange',
+    connector: '-',
+    component: 'group',
+    children: [
+      {
+        label: '开始时间',
+        prop: 'startTime',
+        icon: 'time',
+        component: ElDatePicker,
+        componentProps: {
+          placeholder: '请选择开始时间',
+          clearable: true,
+          type: 'datetime',
+        }
+      },
+      {
+        label: '结束时间',
+        prop: 'endTime',
+        icon: 'time',
+        component: ElDatePicker,
+        componentProps: {
+          placeholder: '请选择结束时间',
+          clearable: true,
+          type: 'datetime',
+        }
+      }
+    ]
+  },
+  {
+    label: '排列方式',
+    prop: 'sort',
+    icon: 'sort',
+    component: ElSelect,
+    componentProps: {
+      placeholder: '请选择排序方式',
+      clearable: true,
+      options: [
+        {
+          label: '升序',
+          value: 'asc'
+        },
+        {
+          label: '降序',
+          value: 'desc'
+        }
+      ]
+    }
+  }
+]
+
+// 定义提交回调
+const handleTagSearchSubmit = async (formData: TagSearchFormType) => {
+  try {
+    // 模拟接口提交
+    console.log('提交标签数据：', formData);
+    ElMessage.success('标签创建成功！');
+    // 实际项目中替换为接口请求：await tagApi.create(formData)
+  } catch (error) {
+    ElMessage.error('标签创建失败！');
+    console.error('提交失败：', error);
+  }
 };
-
-/**
- * 重置表单
- */
-const handleReset = () => {
-  if (!formRef.value) return;
-  
-  // 重置表单字段
-  formRef.value.resetFields();
-  
-  // 清空时间范围（日期选择器需要单独重置）
-  searchForm.dateRange = [];
-  
-  ElMessage.info('搜索条件已重置');
-  
-  // 触发重置后的搜索（可选）
-  // handleSearch();
-};
-
-// 初始化：可加载分类等下拉选项数据
-onMounted(() => {
-
-});
 </script>
 
 <template>
   <div class="tag-search">
-    <div class="tag-search__container">
-      <!-- 头部标题 -->
-      <CardHeader icon="search" title="标签搜索"/>
-      <!-- 表单主体 -->
-      <div class="tag-search__body">
-        <el-form 
-          ref="formRef"
-          :model="searchForm"
-          :rules="searchRules"
-          label-width="80px"
-          label-position="top"
-          class="tag-search__form"
-        >
-          <!-- 关键词搜索 -->
-          <el-form-item label="关键词" prop="keyword" class="tag-search__form-item">
-            <el-input
-              v-model="searchForm.keyword"
-              placeholder="请输入标签名称/描述"
-              clearable
-              prefix-icon="Search"
-              @keyup.enter="handleSearch"
-            />
-          </el-form-item>
-          
-          <!-- 分类筛选 -->
-          <el-form-item label="分类" class="tag-search__form-item">
-            <el-select
-              v-model="searchForm.category"
-              placeholder="请选择分类"
-              clearable
-            >
-              <el-option
-                v-for="item in categoryOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
-          </el-form-item>
-          
-          <!-- 状态筛选 -->
-          <el-form-item label="状态" class="tag-search__form-item">
-            <el-select
-              v-model="searchForm.status"
-              placeholder="请选择状态"
-              clearable
-            >
-              <el-option
-                v-for="item in statusOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
-          </el-form-item>
-          
-          <!-- 创建时间范围 -->
-          <el-form-item label="创建时间" class="tag-search__form-item">
-            <div class="tag-search__date">
-              <el-date-picker
-                type="datetime"
-                placeholder="开始日期"
-                clearable
-              />
-              <el-date-picker
-                type="datetime"
-                placeholder="开始日期"
-                clearable
-              />
-            </div>
-          </el-form-item>
-          
-          <!-- 操作按钮 -->
-          <el-form-item class="tag-search__actions tag-search__form-item">
-            <el-button
-              type="primary"
-              @click="handleSearch"
-              class="tag-search__btn tag-search__btn-submit" 
-            >
-              搜索
-            </el-button>
-            <el-button
-              @click="handleReset"
-              class="tag-search__btn tag-search__btn-reset" 
-            >
-              重置
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-    </div>
+    <SearchCard
+      title="搜索标签"
+      icon="search"
+      submitText="搜索"
+      resetText="重置"
+      labelWidth="80px"
+      labelPosition="top"
+      :initialForm="initialFrom"
+      :formSchema="tagSearchFormSchema"
+      :formFields="tagFormFields"
+      :onSubmit="handleTagSearchSubmit"
+    />
   </div>
 </template>
 
 <style lang="scss" scoped>
-:deep(.el-date-editor.el-input) {
-  width: 100%;
-}
 .tag-search {
   width: 100%;
-  &__container {
-    @include mix.container-style($p: 0, $b: var(--border-base), $r: md);
-  }
-  &__body {
-    @include mix.padding(lg);
-  }
-  // 表单样式优化
-  &__form {
-    width: 100%;
-    @include mix.grid-box($c: 2, $rg: sm, $cg: lg);
-    @include mix.respond-down(md) {
-      @include mix.flex-box($d: column);
-    }
-    &-item {
-      width: 100%;
-    }
-    // 操作按钮区域
-    &__actions {
-      padding-left: 8px; // 对齐标签宽度
-    }
-  }
-  &__date {
-    width: 100%;
-    @include mix.flex-box($j: flex-start, $g: md);
-    &-picker {
-      flex: 1;
-    }
-  }
-  &__btn{
-    @include anim.transition($p: transform bg border-color);
-    @include hov.move-y;
-    &-submit {
-      background-color: var(--primary-base);
-      border-color: var(--primary-base);
-      @include hov.bg(var(--primary-strong));
-      @include hov.border(var(--primary-strong));
-    }
-    &-reset {
-      border-color: var(--border-base-color);
-      @include hov.border(var(--primary-base));
-      @include hov.color(var(--primary-base));
-      @include hov.bg(var(--primary-transparent));
-    }
-  }
 }
 </style>

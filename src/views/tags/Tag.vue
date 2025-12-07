@@ -22,6 +22,5 @@ import TagSearchCard from '@/components/tags/TagSearchCard.vue';
     @extend %flex-column-center;
     @include mix.gap(sm);
   }
-
 }
 </style>
