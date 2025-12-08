@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { type FormInstance, type FormRules } from 'element-plus';
-import { ref, watch, onMounted, computed, reactive } from 'vue';
+import { ref, onMounted, reactive, computed } from 'vue';
 import { z } from 'zod';
 import { useVModel } from '@vueuse/core';
 import type { JSX } from 'vue/jsx-runtime';
+import { zodValidator } from '@/utils/validate.util';
 
 // ------------- 类型定义 -------------
 /** 表单字段配置项 */
@@ -28,17 +29,17 @@ export interface EditFormField {
   render?: (formData: Record<string, any>) => JSX.Element | string;
 }
 /** Props 类型 */
-interface EditCardProps {
+interface EditCardProps<T = any> {
   /** 弹窗是否可见 (v-model 绑定) */
-  modelValue: boolean;
+  isShowEdit: boolean;
   /** 弹窗标题 */
   title?: string;
   /** 初始表单数据 (支持 v-model 双向绑定) */
-  formData?: Record<string, any>;
+  initialForm: T;
   /** 表单字段配置 */
   formFields: EditFormField[];
   /** Zod 校验 Schema */
-  formSchema?: z.ZodSchema;
+  formSchema: z.ZodObject<z.ZodRawShape>;
   /** 自定义校验规则 (优先级高于 Schema) */
   customRules?: FormRules;
   /** 弹窗宽度 */
@@ -65,8 +66,6 @@ interface EditCardProps {
   showCloseBtn?: boolean;
   /** 是否全屏显示 (移动端自动生效) */
   fullscreen?: boolean;
-  /** 提交前钩子 (返回 false 阻止提交) */
-  beforeSubmit?: (formData: Record<string, any>) => boolean | Promise<boolean>;
   /** 是否自动重置表单 (弹窗关闭时) */
   autoReset?: boolean;
 }
@@ -74,16 +73,12 @@ interface EditCardProps {
 interface EditCardEmits {
   /** 弹窗显隐状态变更 */
   (e: 'update:modelValue', value: boolean): void;
-  /** 表单数据变更 (v-model:formData) */
-  (e: 'update:formData', value: Record<string, any>): void;
   /** 确认提交 */
   (e: 'confirm', formData: Record<string, any>): void;
   /** 取消操作 */
   (e: 'cancel'): void;
   /** 弹窗关闭 */
   (e: 'close'): void;
-  /** 表单校验失败 */
-  (e: 'validate-fail', error: any): void;
   /** 表单重置 */
   (e: 'reset'): void;
 }
@@ -111,24 +106,14 @@ const emit = defineEmits<EditCardEmits>();
 
 // ------------- 响应式数据 (使用 useVModel) -------------
 /** 弹窗显隐状态 (双向绑定) */
-const dialogVisible = useVModel(props, 'modelValue', emit, {
+const dialogVisible = useVModel(props, 'isShowEdit', emit, {
   passive: false,
   deep: false
 });
-
-/** 表单数据 (双向绑定，支持外部同步更新) */
-const formData = useVModel(props, 'formData', emit, {
-  passive: false,
-  deep: true
-});
-
 /** 表单实例 */
 const formRef = ref<FormInstance>();
-/** 移动端标识 */
-const isMobile = ref(false);
 /** 表单初始数据 (用于重置) */
-const initialFormData = ref<Record<string, any>>({ ...props.formData });
-const form = reactive<Record<string, any>>({ ...props.formData });
+const form = reactive<Record<string, any>>({ ...props.initialForm });
 // 自动生成 Zod 校验规则（如果未传入自定义规则）
 const generateRules = (): FormRules => {
   if (props.customRules) return props.customRules;
@@ -152,12 +137,64 @@ const generateRules = (): FormRules => {
 };
 const rules = generateRules() satisfies FormRules;
 
+
+/** ---------- 生命周期&监听 ---------- */
+onMounted(() => {
+  
+})
+
+
+/** ---------- 逻辑方法 ---------- */
+const handleConfirm = async () => {
+  if (!formRef.value || props.confirmBtnDisabled) return;
+  try {
+    // 先执行 Element Plus 表单校验
+    await formRef.value.validate();
+    // 执行外部提交回调
+    emit('confirm', form);
+    // 关闭弹窗
+    dialogVisible.value = false;
+  } catch (error) {
+    console.error('表单校验失败：', error);
+    // 可扩展：全局错误提示（如 ElMessage）
+  }
+}
+
+// 重置表单
+const resetForm = () => {
+  formRef.value?.resetFields();
+  // 重置为初始数据
+  Object.assign(form, { ...props.initialForm });
+};
+
+/** 处理取消 */
+const handleCancel = () => {
+  emit('cancel');
+  dialogVisible.value = false;
+};
+
+/** 处理弹窗关闭 */
+const handleClose = () => {
+  dialogVisible.value = false;
+};
+
+/** ---------- 计算属性 ---------- */
+/** 是否全屏显示 */
+const dialogFullscreen = computed(() => {
+  return props.fullscreen;
+});
 </script>
 
 <template>
-  <el-dialog 
-    title="title" 
+  <el-dialog
+    v-model="dialogVisible" 
+    :title="title" 
+    :width="width"
+    :fullscreen="dialogFullscreen"
+    :close-on-click-modal="closeOnClickModal"
+    :close-on-press-escape="closeOnPressEscape"
     @close="onClose"
+    class="edit-card"
   >
     <el-form 
       ref="formRef" 
@@ -165,8 +202,76 @@ const rules = generateRules() satisfies FormRules;
       :rules="rules" 
       :label-width="labelWidth"
       :label-position="labelPosition"
+      class="edit-card__form"
+      autocomplete="off"
     >
+      <!-- 遍历表单字段 -->
+      <template v-for="field in formFields" :key="field.prop">
+        <el-form-item
+          v-if="!field.hidden"
+          :label="field.label"
+          :prop="field.prop"
+          :label-width="field.labelWidth || labelWidth"
+          class="edit-card__form-item"
+        >
+          <!-- 自定义渲染 -->
+          <template v-if="field.render">
+            <component :is="field.render(form)" />
+          </template>
 
+          <!-- 嵌套子字段 (如时间范围) -->
+          <div v-else-if="field.children" class="edit-card__field-group">
+            <template v-for="(child, index) in field.children" :key="child.prop">
+              <el-form-item
+                v-if="!child.hidden"
+                :prop="child.prop"
+                :label="child.label"
+                :label-width="child.labelWidth || '80px'"
+                class="edit-card__field-group-item"
+              >
+                <component
+                  :is="child.component"
+                  v-bind="child.componentProps"
+                  v-model="form[child.prop]"
+                  class="edit-card__field-component"
+                />
+              </el-form-item>
+
+              <!-- 分隔符 -->
+              <span
+                v-if="index < field.children.length - 1 && field.connector"
+                class="edit-card__field-connector"
+              >
+                {{ field.connector }}
+              </span>
+            </template>
+          </div>
+          <!-- 普通字段 -->
+          <component
+            v-else
+            :is="field.component"
+            v-bind="field.componentProps"
+            v-model="form[field.prop]"
+            class="edit-card__field-component"
+          />
+        </el-form-item>
+          <!-- 操作按钮 -->
+          <el-form-item class="form-actions" label-width="0">
+            <el-button 
+              class="create-card__btn create-card__btn-submit" 
+              type="primary" 
+              @click="handleConfirm"
+            >
+              {{ confirmText }}
+            </el-button>
+            <el-button 
+              class="create-card__btn create-card__btn-reset" 
+              @click="resetForm"
+            >
+              {{ cancelText }}
+            </el-button>
+          </el-form-item>
+      </template>
     </el-form>
   </el-dialog>
 </template>
