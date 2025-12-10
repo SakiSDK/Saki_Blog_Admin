@@ -94,6 +94,7 @@ onMounted(async() => {
                 element-loading-text="LOADING..."
                 :element-loading-spinner="svg"
                 element-loading-svg-view-box="-10, -10, 50, 50"
+                fullscreen
                 v-if="stateStore.isGlobalLoading||stateStore.isRouteLoading"
               >
               </div>
@@ -113,6 +114,7 @@ onMounted(async() => {
 
 <style lang="scss" scoped>
 :deep(.el-loading-mask) {
+  @extend %full-size;
   background-color: var(--bg-base);
 }
 :deep(.el-loading-spinner) {

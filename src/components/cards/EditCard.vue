@@ -5,12 +5,16 @@ import { z } from 'zod';
 import { useVModel } from '@vueuse/core';
 import type { JSX } from 'vue/jsx-runtime';
 import { zodValidator } from '@/utils/validate.util';
+import CardHeader from '@/components/bases/CardHeader.vue'
+import VIcon from '../global/VIcon.vue';
 
 // ------------- 类型定义 -------------
 /** 表单字段配置项 */
 export interface EditFormField {
   /** 字段标签 */
   label: string;
+  /** 字段图标 */
+  icon?: string;
   /** 字段属性名 */
   prop: string;
   /** 组件类型 (如 'el-input' / ElInput / 自定义组件) */
@@ -34,6 +38,7 @@ interface EditCardProps<T = any> {
   isShowEdit: boolean;
   /** 弹窗标题 */
   title?: string;
+  headerIcon?: string;
   /** 初始表单数据 (支持 v-model 双向绑定) */
   initialForm: T;
   /** 表单字段配置 */
@@ -190,12 +195,20 @@ const dialogFullscreen = computed(() => {
     v-model="dialogVisible" 
     :title="title" 
     :width="width"
+    :show-close="showCloseBtn"
     :fullscreen="dialogFullscreen"
     :close-on-click-modal="closeOnClickModal"
     :close-on-press-escape="closeOnPressEscape"
     @close="onClose"
     class="edit-card"
   >
+    <template #header>
+      <CardHeader title="表单标题" :icon="headerIcon">
+        <template #actions>
+          <el-icon class="edit-card__close"> <VIcon name="close"/> </el-icon>
+        </template>
+      </CardHeader>
+    </template>
     <el-form 
       ref="formRef" 
       :model="form" 
@@ -214,6 +227,14 @@ const dialogFullscreen = computed(() => {
           :label-width="field.labelWidth || labelWidth"
           class="edit-card__form-item"
         >
+          <template #label>
+            <div class="edit-card__label">
+              <el-icon class="edit-card__label-icon"> 
+                <VIcon :name="field.icon ?? ''"/>
+              </el-icon>
+              <span class="edit-card__label-text">{{ field.label }}</span>
+            </div>
+          </template>
           <!-- 自定义渲染 -->
           <template v-if="field.render">
             <component :is="field.render(form)" />
@@ -255,28 +276,59 @@ const dialogFullscreen = computed(() => {
             class="edit-card__field-component"
           />
         </el-form-item>
-          <!-- 操作按钮 -->
-          <el-form-item class="form-actions" label-width="0">
-            <el-button 
-              class="create-card__btn create-card__btn-submit" 
-              type="primary" 
-              @click="handleConfirm"
-            >
-              {{ confirmText }}
-            </el-button>
-            <el-button 
-              class="create-card__btn create-card__btn-reset" 
-              @click="resetForm"
-            >
-              {{ cancelText }}
-            </el-button>
-          </el-form-item>
       </template>
+      <!-- 操作按钮 -->
+      <el-form-item class="form-actions" label-width="0">
+        <el-button 
+          class="edit-card__btn edit-card__btn-submit" 
+          type="primary" 
+          @click="handleConfirm"
+        >
+          {{ confirmText }}
+        </el-button>
+        <el-button 
+          class="edit-card__btn edit-card__btn-reset" 
+          @click="resetForm"
+        >
+          {{ cancelText }}
+        </el-button>
+      </el-form-item>
     </el-form>
   </el-dialog>
 </template>
 
 <style lang="scss" scoped>
-
+.edit-card {
+  &__btn{
+    @include anim.transition($p: transform bg border-color);
+    @include hov.move-y;
+    &-submit {
+      background-color: var(--primary-base);
+      border-color: var(--primary-base);
+      @include hov.bg(var(--primary-strong));
+      @include hov.border(var(--primary-strong));
+    }
+    &-reset {
+      border-color: var(--border-base-color);
+      @include hov.border(var(--primary-base));
+      @include hov.color(var(--primary-base));
+      @include hov.bg(var(--primary-transparent));
+    }
+  }
+  &__label {
+    @extend %flex-center;
+    @include mix.gap(xs);
+  }
+  &__close {
+    @include anim.transition($p: color transform);
+    @include hov.color(var(--primary-base));
+    &:hover {
+      transform: rotate(90deg) scale(1.3);
+    }
+    &:active {
+      transform: rotate(90deg) scale(1.1);
+    }
+  }
+}
 
 </style>

@@ -2,6 +2,7 @@
 import TagCreateCard from '@/components/tags/TagCreateCard.vue';
 import TagListCard from '@/components/tags/TagListCard.vue';
 import TagSearchCard from '@/components/tags/TagSearchCard.vue';
+import TagEditCard from '@/components/tags/TagEditCard.vue';
 
 </script>
 
@@ -11,6 +12,7 @@ import TagSearchCard from '@/components/tags/TagSearchCard.vue';
       <TagCreateCard/>
       <TagSearchCard/>
       <TagListCard/>
+      <TagEditCard/>
     </div>
   </div>
 </template>

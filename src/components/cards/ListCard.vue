@@ -206,7 +206,7 @@ onMounted(() => {
             :key="column.prop"
             :label="column.label"
             :prop="column.prop"
-            :width="column.width"
+            :min-width="column.width"
             align="center"
           >
             <template #default="scope">

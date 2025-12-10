@@ -82,7 +82,7 @@
     transform: scale($ratio);
   }
   &:active {
-    transform: scale(calc(#{$ratio} - 0.03));
+    transform: scale(calc(#{$ratio} - 0.1));
   }
 }
 

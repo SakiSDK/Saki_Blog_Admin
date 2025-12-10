@@ -5,7 +5,7 @@ import ArticleCreate from '@/views/articles/ArticleCreate.vue';
 import ArticleList from '@/views/articles/ArticleList.vue';
 import ArticleEdit from '@/views/articles/ArticleEdit.vue';
 import ArticleDraft from '@/views/articles/ArticleDraft.vue';
-import Album from '@/views/albums/Album.vue';
+import Album from '@/views/albums/AlbumCreate.vue';
 import Category from '@/views/categories/Category.vue';
 import Tag from '@/views/tags/Tag.vue';
 import BasicSettings from '@/views/settings/BasicSettings.vue';

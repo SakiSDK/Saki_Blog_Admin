@@ -32,6 +32,13 @@ export const useStateStore = defineStore('state', () => {
     isRouteLoading.value = value;
   }
 
+  /** ---------- 标签编辑弹窗状态 ---------- */
+  const isTagEditDialogVisible = ref<boolean>(false);
+  const setTagEditDialogVisible = (value: boolean) => {
+    isTagEditDialogVisible.value = value;
+  }
+
+
   return {
     isCollapsedAsideBar,
     toggleCollapsedAsideBar,
@@ -39,6 +46,8 @@ export const useStateStore = defineStore('state', () => {
     setGlobalLoading,
     isRouteLoading,
     setRouteLoading,
+    isTagEditDialogVisible,
+    setTagEditDialogVisible,
   }
 })
 
