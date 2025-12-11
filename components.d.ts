@@ -11,6 +11,8 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AlbumListCard: typeof import('./src/components/albums/AlbumListCard.vue')['default']
+    AlbumSearchCard: typeof import('./src/components/albums/AlbumSearchCard.vue')['default']
     AsideBar: typeof import('./src/components/global/AsideBar.vue')['default']
     CardHeader: typeof import('./src/components/bases/CardHeader.vue')['default']
     CreateCard: typeof import('./src/components/cards/CreateCard.vue')['default']
@@ -28,6 +30,7 @@ declare module 'vue' {
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElHeader: typeof import('element-plus/es')['ElHeader']
     ElIcon: typeof import('element-plus/es')['ElIcon']
+    ElImage: typeof import('element-plus/es')['ElImage']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElInputNumber: typeof import('element-plus/es')['ElInputNumber']
     ElMain: typeof import('element-plus/es')['ElMain']

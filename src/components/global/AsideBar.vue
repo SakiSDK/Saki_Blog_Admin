@@ -86,8 +86,8 @@ const menuItems = ref<MenuItem[]>([
     label: '相册管理',
     // 子菜单
     children: [
-      { index: '/albums/list', icon: 'album', label: '相册列表' },
-      { index: '/albums/create', icon: 'plus', label: '新增相册' },
+      { index: '/album/list', icon: 'album', label: '相册列表' },
+      { index: '/album/create', icon: 'plus', label: '新增相册' },
     ],
   }
 ])

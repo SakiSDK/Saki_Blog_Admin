@@ -13,6 +13,8 @@ import UploadSettings from '@/views/settings/UploadSettings.vue';
 import EmailSettings from '@/views/settings/EmailSettings.vue';
 import SeoSettings from '@/views/settings/SeoSettings.vue';
 import NotFound404 from '@/views/errors/NotFound404.vue';
+import AlbumList from '@/views/albums/AlbumList.vue';
+import AlbumCreate from '@/views/albums/AlbumCreate.vue';
 
 
 /** ---------- 路由配置 ---------- */
@@ -104,14 +106,26 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/album',
     name: 'Album',
-    component: Album,
+    redirect: '/album/list',
     meta: {
       // requiresAuth: true,
       //? 测试环境
       requiresAuth: false,
-      title: '相册管理',
-      roles: ['admin'], // 仅管理员可访问
     },
+    children: [
+      {
+        path: 'list',
+        name: 'AlbumList',
+        component: AlbumList,
+        meta: { title: '相册列表' },
+      },
+      {
+        path: 'create',
+        name: 'AlbumCreate',
+        component: AlbumCreate,
+        meta: { title: '新增相册' },
+      },
+    ],
   },
   // 系统设置（嵌套路由）
   {

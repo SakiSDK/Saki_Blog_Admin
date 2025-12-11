@@ -1,49 +1,31 @@
 <script lang="ts" setup>
-import { ElMessage, ElMessageBox, type ListItem } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import ListCard from '@/components/cards/ListCard.vue';
-import { computed, ref } from 'vue';
+import type { TableColumnField } from '@/types/components/base.type';
+import { computed, onMounted, ref } from 'vue';
+import { useTagStore } from '@/stores/tag.store';
+import { storeToRefs } from 'pinia';
+import type { Tag } from '@/types/entities/tag.type';
+import { useStateStore } from '@/stores/state.store';
 
-// 定义标签类型接口
-interface TagItem {
-  id: number;
-  name: string;
-  description: string;
-  order: number;
-  postCount: number;
-  createdAt: string;
-  status: boolean;
-  isSelected?: boolean;
-}
 
-// 模拟数据
-const tags = ref<TagItem[]>([
-  {
-    id: 1,
-    name: "JavaScript",
-    order: 1,
-    description: "前端开发语言，用于网页交互",
-    postCount: 145,
-    createdAt: "2023-01-15",
-    status: true,
-  },
-  { id: 2, name: "UI设计", description: "用户界面设计与优化", order: 1, postCount: 89, createdAt: "2023-02-10", status: true },
-  { id: 3, name: "项目管理", description: "项目进度管理与团队协作", order: 1, postCount: 67, createdAt: "2023-02-28", status: true },
-  { id: 4, name: "React", description: "流行的前端JavaScript框架",order: 1, postCount: 132, createdAt: "2023-03-05", status: true },
-  { id: 5, name: "市场营销", description: "产品推广与市场策略",order: 1, postCount: 56, createdAt: "2023-03-12", status: true },
-  // 更多数据...
-]);
+/** ---------- 状态管理 ---------- */
+const tagStore = useTagStore();
+const { pagination, tagList, isLoading } = storeToRefs(tagStore);
+const stateStore = useStateStore();
+
 
 // 表格列配置
-const tableColumns = ref([
+const tableColumns = ref<TableColumnField[]>([
   {
     label: '标签ID',
     prop: 'id',
-    width: 100,
+    width: 70,
   },
   {
     label: '标签名称',
     prop: 'name',
-    width: 180,
+    width: 140,
   },
   {
     label: '标签描述',
@@ -53,12 +35,17 @@ const tableColumns = ref([
   {
     label: '优先级',
     prop: 'order',
-    width: 100,
+    width: 70,
   },
   {
     label: '文章数量',
     prop: 'postCount',
-    width: 120,
+    width: 90,
+  },
+  {
+    label: '状态',
+    prop: 'status',
+    width: 100,
   },
   {
     label: '创建时间',
@@ -66,28 +53,29 @@ const tableColumns = ref([
     width: 180,
   },
   {
-    label: '状态',
-    prop: 'status',
-    width: 120,
-  }
+    label: '更新时间',
+    prop: 'updatedAt',
+    width: 180,
+  },
 ]);
 
 // 选中的行
-const selectedRows = ref<TagItem[]>([]);
+const selectedRows = ref<Tag[]>([]);
 
 // 处理选择变化
-const handleSelectionChange = (val: TagItem[]) => {
+const handleSelectionChange = (val: Tag[]) => {
   selectedRows.value = val;
 };
 
 // 编辑标签
-const handleEdit = (row: TagItem) => {
+const handleEdit = (row: Tag) => {
   ElMessage.info(`准备编辑标签: ${row.name}`);
   // 打开编辑弹窗逻辑
+  stateStore.setTagEditDialogVisible(true);
 };
 
 // 删除标签
-const handleDelete = async (row: TagItem) => {
+const handleDelete = async (row: Tag) => {
   try {
     await ElMessageBox.confirm(
       '此操作将永久删除该标签, 是否继续?',
@@ -100,9 +88,9 @@ const handleDelete = async (row: TagItem) => {
     );
     
     // 执行删除逻辑
-    const index = tags.value.findIndex(tag => tag.id === row.id);
+    const index = tagList.value.findIndex(tag => tag.id === row.id);
     if (index !== -1) {
-      tags.value.splice(index, 1);
+      tagList.value.splice(index, 1);
       ElMessage.success('标签删除成功');
     }
   } catch {
@@ -111,7 +99,7 @@ const handleDelete = async (row: TagItem) => {
 };
 
 // 切换状态
-const handleToggleStatus = async (row: TagItem) => {
+const handleToggleStatus = async (row: Tag) => {
   const action = row.status ? '禁用' : '启用';
   
   try {
@@ -125,8 +113,8 @@ const handleToggleStatus = async (row: TagItem) => {
       }
     );
     
-    row.status = !row.status;
-    ElMessage.success(`标签已${row.status ? '启用' : '禁用'}`);
+    row.status = row.status==='active'?'inactive':'active';
+    ElMessage.success(`标签已${row.status==='active' ? '启用' : '禁用'}`);
   } catch {
     ElMessage.info(`已取消${action}操作`);
   }
@@ -150,7 +138,7 @@ const handleBulkDelete = () => {
   ).then(() => {
     // 执行批量删除
     const selectedIds = selectedRows.value.map(row => row.id);
-    tags.value = tags.value.filter(tag => !selectedIds.includes(tag.id));
+    tagList.value = tagList.value.filter(tag => !selectedIds.includes(tag.id));
     selectedRows.value = [];
     ElMessage.success(`成功删除 ${selectedIds.length} 个标签`);
   }).catch(() => {
@@ -161,14 +149,14 @@ const handleBulkDelete = () => {
 // 操作列配置
 const actionColumnConfig = {
   label: '操作',
-  width: 200,
+  width: 140,
   actions: [
     {
       name: 'edit',
       icon: 'edit',
       tooltip: '编辑标签',
       type: 'primary' as const,
-      handler: (row: unknown) => handleEdit(row as TagItem)
+      handler: (row: unknown) => handleEdit(row as Tag)
     },
     {
       name: 'delete',
@@ -177,16 +165,16 @@ const actionColumnConfig = {
       type: 'danger' as const,
       confirm: true,
       confirmText: '确定要删除该标签吗？',
-      handler: (row: unknown) => handleDelete(row as TagItem)
+      handler: (row: unknown) => handleDelete(row as Tag)
     },
     {
       name: 'toggleStatus',
       icon: 'play',
       tooltip: '切换状态',
       type: 'success' as const,
-      confirm: true,
+      confirm: false,
       confirmText: '确定要切换标签状态吗？',
-      handler: (row: unknown) => handleToggleStatus(row as TagItem)
+      handler: (row: unknown) => handleToggleStatus(row as Tag)
     }
   ]
 };
@@ -203,24 +191,30 @@ const headerActions = [
 ];
 
 
-const pageSize = ref<number>(10);
-const currentPage = ref<number>(1);
+onMounted(async () => {
+  try {
+    await tagStore.fetchTagList();
+  } catch (error) {
+    
+  }
+})
 </script>
 
 <template>
   <div class="tag-list">
     <ListCard
+      v-if="!isLoading"
       title="标签列表"
       icon="list"
-      :data="tags"
-      :selectedRows="selectedRows"
+      :data="tagList"
+      :selected-rows="selectedRows"
       :columns="tableColumns"
       :show-selection="true"
       :show-pagination="true"
-      :pageSize="pageSize"
-      :currentPage="currentPage"
-      :pageTotals="Math.ceil(tags.length/pageSize)"
-      :total="tags.length"
+      v-modle:page-size="pagination.pageSize"
+      v-modle::current-page="pagination.page"
+      :page-totals="tagStore.getTagtotalPages"
+      :total="tagStore.getTagTotal"
       :show-action-column="true"
       :action-column-config="actionColumnConfig"
       :header-actions="headerActions"

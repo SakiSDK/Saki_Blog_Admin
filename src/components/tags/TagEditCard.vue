@@ -88,7 +88,7 @@ const formFields = ref([
       :initialForm="initialForm"
       :formFields="formFields"
       :formSchema="tagUpdateFormSchema"
-      :is-show-edit="isTagEditDialogVisible"
+      v-model:is-show-edit="isTagEditDialogVisible"
     />
   </div>
 </template>

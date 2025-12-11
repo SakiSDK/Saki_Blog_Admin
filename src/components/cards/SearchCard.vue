@@ -3,7 +3,7 @@ import { ElForm, ElFormItem, type FormInstance, type FormRules } from 'element-p
 import CardHeader from '../bases/CardHeader.vue';
 import { reactive, ref } from 'vue';
 import type z from 'zod';
-import type { FormFieldConfig, SearchCardProps } from '@/types/components/base.type';
+import type { SearchCardProps } from '@/types/components/base.type';
 import { zodValidator } from '@/utils/validate.util';
 
 
@@ -161,7 +161,7 @@ const resetForm = () => {
 .search-card {
   width: 100%;
   &__container {
-    @include mix.container-style($p: 0);
+    @include mix.container-style($p: 0, $b: var(--border-base));
   }
   &__body {
     @include mix.padding(lg);

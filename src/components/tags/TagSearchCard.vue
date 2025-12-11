@@ -5,7 +5,7 @@ import type { FormFieldConfig } from '@/types/components/base.type';
 import { tagSearchFormSchema } from '@/schemas/tag.schema';
 import type { TagSearchFormType } from '@/types/schemas/tag.type';
 
-const initialFrom = {
+const initialForm = {
   keyword: '',
   status: '',
   timeRange: [],
@@ -119,7 +119,7 @@ const handleTagSearchSubmit = async (formData: TagSearchFormType) => {
       resetText="重置"
       labelWidth="80px"
       labelPosition="top"
-      :initialForm="initialFrom"
+      :initialForm="initialForm"
       :formSchema="tagSearchFormSchema"
       :formFields="tagFormFields"
       :onSubmit="handleTagSearchSubmit"

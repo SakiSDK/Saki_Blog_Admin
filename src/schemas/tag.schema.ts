@@ -1,5 +1,38 @@
 import { z } from 'zod'; 
-import { zStr } from './base.schema';
+import { zId, zPageNum, zPageSize, zSort, zStr } from './common.schema';
+import { PaginationSchema, ResponseSchema } from './base.schema';
+
+/** ---------- 返回值Tag类型 ---------- */
+const TagSchema = z.object({
+  id: zId.describe("标签ID"),
+  name: zStr
+    .max(50, "标签名最多50个字符")
+    .regex(/^[a-zA-Z0-9_\u4e00-\u9fa5\-\s]+$/, "标签名只能包含中英文、数字、下划线、横线和空格")
+    .describe("标签名称"),
+  slug: zStr
+    .max(50, "标签别名最多50个字符")
+    .regex(/^[a-z0-9\-]+$/, "标签别名只能包含小写字母、数字和横线")
+    .toLowerCase()
+    .describe("标签别名"),
+  description: zStr
+    .max(500, "描述最多 500 个字符")
+    .optional()
+    .nullable()
+    .describe("描述"),
+  postCount: z
+    .number("文章数量必须是数字")
+    .int("文章数量必须是整数")
+    .min(0, "文章数量不能小于 0")
+    .describe("文章数量"),
+  order: z
+    .number("排序必须是数字")
+    .int("排序必须是整数")
+    .min(0, "排序不能小于 0")
+    .describe("排序"),
+  status: z.enum(['active', 'inactive'] as const),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+})
 
 /** ---------- 定义标签创建的Zod校验Schema ---------- */
 export const tagFormSchema = z.object({
@@ -47,6 +80,31 @@ export const tagUpdateFormSchema = z.object({
 })
 
 
+export const TagListDataSchema = z.object({
+  list: z.array(TagSchema),
+  pagination: PaginationSchema
+})
+
+/** ---------- 标签列表完整响应 Schema + 类型推导 ---------- */
+// 组合出标签列表接口的完整响应 Schema
+export const TagListResponseSchema = ResponseSchema(TagListDataSchema);
+export const TagListParamsSchema = z.object({
+  page: zPageNum.default(1).optional().describe('页码'),
+  pageSize: zPageSize.optional().describe('每页数量'),
+  keyword: zStr.max(50, "搜索关键词不能超过 50 个字符").optional().describe('搜索关键词'),
+  sort: zSort.optional(),
+})
+
+
 export type TagFormType = z.infer<typeof tagFormSchema>;
 export type TagSearchFormType = z.infer<typeof tagSearchFormSchema>;
 export type TagUpdateFormType = z.infer<typeof tagUpdateFormSchema>;
+
+/** ---------- Tag返回值类型 ---------- */
+export type Tag = z.infer<typeof TagSchema>;
+
+/** ---------- Response返回类型 ---------- */
+export type TagListResponse = z.infer<typeof TagListResponseSchema>
+
+/** ---------- params请求类型 ---------- */
+export type TagListParams = z.infer<typeof TagListParamsSchema>

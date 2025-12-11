@@ -2,10 +2,12 @@
 import { ElMessage, ElMessageBox } from 'element-plus';
 import CardHeader from '@/components/bases/CardHeader.vue'
 import VIcon from '../global/VIcon.vue';
-import { computed, onMounted, ref, watch, type Ref } from 'vue';
+import { onMounted, ref, watch, type Ref } from 'vue';
 import { useDomUtil } from '@/utils/dom.util';
 import { useEventListener, useVModel } from '@vueuse/core';
 import type { ListCardProps, ListItem, Pagination } from '@/types/components/base.type';
+import DateUtil from '@/utils/date.util';
+
 
 const props = withDefaults(defineProps<ListCardProps>(), {
   icon: 'list',
@@ -35,7 +37,6 @@ const emit = defineEmits<{
 /** ---------- 响应式数据 ---------- */
 const listData = useVModel(props, 'data', emit);
 // 页面数据
-const pageTotals = ref<number>(props.pageTotals ?? 0);
 const total = ref<number>(props.total ?? 0);
 const currentPage = useVModel(props, 'currentPage', emit, {defaultValue: 1}) as Ref<number>;
 const pageSize = useVModel(props, 'pageSize', emit, {defaultValue: 10}) as Ref<number>;
@@ -227,6 +228,17 @@ onMounted(() => {
                   {{ scope.row.status ? '正常' : '禁用' }}
                 </el-tag>
               </template>
+              <!-- 封面列特殊处理 -->
+              <template v-else-if="column.prop==='cover'">
+                <el-image
+                  :src="scope.row.cover"
+                  style="width: 100px; height: 100px"
+                  lazy
+                />
+              </template>
+              <template v-else-if="['createdAt', 'updatedAt'].includes(column.prop)">
+                {{ DateUtil.format(scope.row[column.prop]) }}
+              </template>
               <!-- 默认渲染 -->
               <template v-else>
                 {{ scope.row[column.prop] }}
@@ -253,11 +265,20 @@ onMounted(() => {
                       :disabled="action.disabled ? action.disabled(scope.row) : false"
                       class="list-card__options-btn"
                     >
-                      <el-icon 
-                        class="tag-list__icon tag-list__icon--edit" 
-                      >
-                        <VIcon :name="action.icon"/>
-                      </el-icon>
+                      <template v-if="action.name==='toggleStatus'">
+                        <el-icon 
+                          class="tag-list__icon tag-list__icon--edit" 
+                        >
+                          <VIcon :name="scope.row.status==='active' ? 'play' : 'stop'"/>
+                        </el-icon>
+                      </template>
+                      <template v-else>
+                        <el-icon 
+                          class="tag-list__icon tag-list__icon--edit" 
+                        >
+                          <VIcon :name="action.icon"/>
+                        </el-icon>
+                      </template>
                     </el-button>
                   </el-tooltip>
                 </template>
@@ -311,48 +332,10 @@ onMounted(() => {
     background: var(--surface-base);
     &:hover>td.el-table__cell {
       background-color: var(--bg-base);
-      &:first-child,
-      &:last-child {
-        border-color: transparent;
-        &::before {
-          border-color: var(--el-table-border-color);
-        }
-        &::after {
-          background-color: var(--surface-base);
-        }
-      }
-      &:first-child,
-      &:first-child::before {
-        @include mix.radius-d(bl, md);
-        @include mix.radius-d(tl, md);
-      }
-      &:last-child,
-      &:last-child::before {
-        @include mix.radius-d(br, md);
-        @include mix.radius-d(tr, md);
-      }
     }
   }
   .el-table__cell {
-    @include anim.transition($p: bg border-color border-radius, $dr: 'slow');
-    &:first-child,
-    &:last-child {
-      position: relative;
-      &::before {
-        content: '';
-        @extend %full-size;
-        @include mix.position-style($p: absolute, $t: -1px, $l: 0, $z: 1);
-        box-sizing: content-box;
-        border: 1px solid transparent;
-        border-right: none;
-        border-left: none;
-      }
-      &::after {
-        content: '';
-        @include mix.size(100%, 1px);
-        @include mix.position-style($p: absolute, $t: -1px, $r: 0);
-      }
-    }
+    @include anim.transition($p: bg, $dr: 'slow');
   }
 }
 .list-card {

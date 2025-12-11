@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { type FormInstance, type FormRules } from 'element-plus';
-import { ref, onMounted, reactive, computed } from 'vue';
+import { ref, reactive, computed} from 'vue';
 import { z } from 'zod';
 import { useVModel } from '@vueuse/core';
 import type { JSX } from 'vue/jsx-runtime';
@@ -142,13 +142,6 @@ const generateRules = (): FormRules => {
 };
 const rules = generateRules() satisfies FormRules;
 
-
-/** ---------- 生命周期&监听 ---------- */
-onMounted(() => {
-  
-})
-
-
 /** ---------- 逻辑方法 ---------- */
 const handleConfirm = async () => {
   if (!formRef.value || props.confirmBtnDisabled) return;
@@ -164,7 +157,9 @@ const handleConfirm = async () => {
     // 可扩展：全局错误提示（如 ElMessage）
   }
 }
-
+const onClose = () => {
+  dialogVisible.value = false;
+}
 // 重置表单
 const resetForm = () => {
   formRef.value?.resetFields();
@@ -172,16 +167,6 @@ const resetForm = () => {
   Object.assign(form, { ...props.initialForm });
 };
 
-/** 处理取消 */
-const handleCancel = () => {
-  emit('cancel');
-  dialogVisible.value = false;
-};
-
-/** 处理弹窗关闭 */
-const handleClose = () => {
-  dialogVisible.value = false;
-};
 
 /** ---------- 计算属性 ---------- */
 /** 是否全屏显示 */
