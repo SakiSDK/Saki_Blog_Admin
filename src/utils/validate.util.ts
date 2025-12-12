@@ -11,7 +11,9 @@ export const validateRequest = <T>(schema: z.ZodSchema<T>, data: unknown): T => 
 };
 
 export const validateResponse = <T>(schema: z.ZodSchema<T>, data: unknown): T => {
-  const result = schema.safeParse(data);
+  // 核心：null 兜底为空对象，避免 Zod 校验失败
+  const safeData = data === null ? {} : data;
+  const result = schema.safeParse(safeData);
   if (!result.success) {
     console.error("❌ Response 数据校验失败:", result.error);
     throw new Error("服务端返回异常数据格式");

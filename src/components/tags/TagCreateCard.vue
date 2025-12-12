@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-import { ElInput, ElInputNumber, ElMessage } from 'element-plus';
+import { ElInput, ElInputNumber, ElMessage, ElSelect } from 'element-plus';
 import type { TagFormType } from '@/types/schemas/tag.type';
 import { tagFormSchema } from '@/schemas/tag.schema';
 import CreateCard from '../cards/CreateCard.vue';
+import type { FormFieldConfig } from '@/types/components/base.type';
 
 
 // 定义初始表单数据
@@ -12,11 +13,12 @@ const initialForm: TagFormType = {
   order: 0
 };
 // 定义表单字段配置
-const tagFormFields = [
+const tagFormFields:FormFieldConfig[] = [
   {
     label: '标签名称',
     icon: 'tag',
     prop: 'name',
+    row: 1,
     component: ElInput,
     componentProps: {
       placeholder: '请输入标签名称',
@@ -28,6 +30,7 @@ const tagFormFields = [
     label: '标签描述',
     icon: 'description',
     prop: 'description',
+    row: 2,
     component: ElInput,
     componentProps: {
       placeholder: '请输入标签描述',
@@ -41,11 +44,34 @@ const tagFormFields = [
     label: '优先级',
     icon: 'sort',
     prop: 'order',
+    group: 'group1',
+    row: 3,
     component: ElInputNumber,
     componentProps: {
       placeholder: '请输入排序',
       min: 0,
-      step: 1
+      step: 1,
+    }
+  },
+  {
+    label: '状态',
+    icon: 'switch',
+    prop: 'status',
+    group: 'group1',
+    row: 3,
+    component: ElSelect,
+    componentProps: {
+      placeholder: '请选择状态',
+      options: [
+        {
+          label: '正常',
+          value: 1
+        },
+        {
+          label: '禁用',
+          value: 0
+        }
+      ]
     }
   }
 ];

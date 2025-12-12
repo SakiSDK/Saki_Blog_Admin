@@ -2,11 +2,11 @@
 import { ElMessage, ElMessageBox } from 'element-plus';
 import ListCard from '@/components/cards/ListCard.vue';
 import type { TableColumnField } from '@/types/components/base.type';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useTagStore } from '@/stores/tag.store';
 import { storeToRefs } from 'pinia';
-import type { Tag } from '@/types/entities/tag.type';
 import { useStateStore } from '@/stores/state.store';
+import type { Tag } from '@/schemas/tag.schema';
 
 
 /** ---------- 状态管理 ---------- */
@@ -100,7 +100,7 @@ const handleDelete = async (row: Tag) => {
 
 // 切换状态
 const handleToggleStatus = async (row: Tag) => {
-  const action = row.status ? '禁用' : '启用';
+  const action = row.status==='active' ? '禁用' : '启用';
   
   try {
     await ElMessageBox.confirm(
@@ -109,14 +109,26 @@ const handleToggleStatus = async (row: Tag) => {
       {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: row.status ? 'warning' : 'info'
+        customClass: 'custom-tag-confirm-box', 
+        type: row.status==='inactive' ? 'warning' : 'info'
       }
-    );
-    
-    row.status = row.status==='active'?'inactive':'active';
-    ElMessage.success(`标签已${row.status==='active' ? '启用' : '禁用'}`);
-  } catch {
-    ElMessage.info(`已取消${action}操作`);
+    )    // 点击了确定才会执行这里
+    const res = await tagStore.toggleTagStatus(row.id);
+    if (res.data) {
+      row.status = res.data.status;
+    } else {
+      ElMessage.error('响应数据异常，无法更新状态');
+    }
+    if (res.success) {
+      ElMessage(
+        {
+          message: res.message || '操作成功',
+          type: 'success'
+        }
+      );
+    }
+  } catch(err: any) {
+    ElMessage.error(`操作失败：${err.message || err}`);
   }
 };
 
@@ -190,7 +202,7 @@ const headerActions = [
   },
 ];
 
-
+/** ---------- 生命周期 ---------- */
 onMounted(async () => {
   try {
     await tagStore.fetchTagList();
@@ -198,12 +210,23 @@ onMounted(async () => {
     
   }
 })
+
+
+/** ---------- 监听 ---------- */
+watch(
+  () => [pagination.value.page, pagination.value.pageSize],
+  async ([page, pageSize], [oldPage, oldPageSize]) => {
+    // 只有真正改变才触发请求
+    if (page === oldPage && pageSize === oldPageSize) return
+    await tagStore.fetchTagList({ page, pageSize }, true)
+  }
+)
 </script>
 
 <template>
   <div class="tag-list">
     <ListCard
-      v-if="!isLoading"
+      :loading="isLoading"
       title="标签列表"
       icon="list"
       :data="tagList"
@@ -211,10 +234,10 @@ onMounted(async () => {
       :columns="tableColumns"
       :show-selection="true"
       :show-pagination="true"
-      v-modle:page-size="pagination.pageSize"
-      v-modle::current-page="pagination.page"
-      :page-totals="tagStore.getTagtotalPages"
-      :total="tagStore.getTagTotal"
+      v-model:pageSize="pagination.pageSize"
+      v-model:currentPage="pagination.page"
+      :page-totals="pagination.totalPages"
+      :total="pagination.total"
       :show-action-column="true"
       :action-column-config="actionColumnConfig"
       :header-actions="headerActions"

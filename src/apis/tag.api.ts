@@ -1,8 +1,7 @@
 import type { AxiosRequestConfig } from 'axios';
-import { get } from '@/utils/request.util';
-import type { TagListResponse, TagListParams } from '@/types/entities/tag.type';
+import { get, patch } from '@/utils/request.util';
 import { validateRequest, validateResponse } from "@/utils/validate.util";
-import { TagListParamsSchema, TagListResponseSchema } from '@/schemas/tag.schema';
+import { TagListParamsSchema, TagListResponseSchema, TagStatusResponseSchema, type Tag, type TagListParams, type TagListResponse, type TagStatusResponse } from '@/schemas/tag.schema';
 
 
 export const TagApi = {
@@ -17,7 +16,15 @@ export const TagApi = {
       ...params
     }
     const safeParams = validateRequest(TagListParamsSchema, unitParams);
-    const res = await get<TagListResponse>('/tag/', safeParams, config);
+    const res = await get<TagListResponse>('/tag', safeParams, config);
     return validateResponse(TagListResponseSchema, res);
+  },
+
+  toggleTagStatus: async (
+    id: number,
+    config?: AxiosRequestConfig
+  ): Promise<TagStatusResponse> => {
+    const res = await patch<TagStatusResponse>(`/tag/${id}/status`, undefined, config);
+    return validateResponse(TagStatusResponseSchema, res);
   }
 } 

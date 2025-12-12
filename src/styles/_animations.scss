@@ -580,8 +580,7 @@ $pop-in-duration: 0.5s !default; // 弹出动画时长
 }
 .loading-fade-leave-active {
   /* 离开过渡：opacity 从 1 → 0，慢速度，缓动平滑 */
-  transition: opacity 0.8s ease-in-out; /* duration 设为 slower（0.8s 左右） */
-  @include transition($p: opacity, $dr: slower, $tf: ease-in-out);
+  @include transition($p: opacity, $dr: 1s, $tf: ease-in-out);
 }
 .loading-fade-leave-to {
   opacity: 0; /* 离开后：最终状态为透明 */

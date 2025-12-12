@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { TagApi } from '@/apis/tag.api';
-import type { Tag, TagListParams, TagListResponse } from '@/types/entities/tag.type';
 import { ErrorResponseSchema, type ErrorResponse, type Pagination } from '@/schemas/base.schema';
 import type { AxiosRequestConfig } from 'axios';
 import { useTimeoutFn } from '@vueuse/core';
+import type { Tag, TagListParams, TagListResponse, TagStatusResponse } from '@/schemas/tag.schema';
 
 
 
@@ -51,6 +51,10 @@ export const useTagStore = defineStore('tag', () => {
     errorCode.value = null
     isPageReloaded.value = false
   }
+
+  /** 
+   * 获取标签列表
+   */
   const fetchTagList = async(
     params?: TagListParams,
     isRefresh?: boolean,
@@ -138,6 +142,47 @@ export const useTagStore = defineStore('tag', () => {
     }
   }
 
+  const toggleTagStatus = async (
+    id: number,
+    isRefresh?: boolean,
+    config?: AxiosRequestConfig
+  ): Promise<TagStatusResponse> => { 
+    try {
+      const res = await TagApi.toggleTagStatus(id, config);
+      if (!res.success) {
+        const errorRes = ErrorResponseSchema.parse(res) as ErrorResponse;
+        errorMsg.value = `[${errorRes.code}] ${errorRes.message}`;
+        throw new Error(errorMsg.value);
+      }
+      const updatedTag = res.data as Tag;
+      const index = tagList.value.findIndex((tag) => tag.id === updatedTag.id);
+      if (index !== -1) {
+        tagList.value[index] = {
+          ...tagList.value[index],
+          ...updatedTag,
+        };
+      }
+      // 若要刷新（比如后台更新分页后不一致），重新 fetch
+      if (isRefresh) {
+        await fetchTagList(currentParams.value, true);
+      }
+      return res;
+    } catch (error) {
+      // 统一兜底返回格式，确保始终满足 TagStatusResponse 结构
+      const fallbackResponse: TagStatusResponse = {
+        success: false,
+        code: 500,
+        message: '操作失败',
+        data: null
+      };
+      if (error instanceof Error) {
+        fallbackResponse.message = error.message;
+      }
+      console.error('❌ 标签状态切换失败：', error);
+      return fallbackResponse;
+    }
+  }
+
   return {
     /** ---------- 数据 ---------- */
     tagList,
@@ -159,5 +204,6 @@ export const useTagStore = defineStore('tag', () => {
     /** ---------- 方法 ---------- */
     resetState,
     fetchTagList,
+    toggleTagStatus,
   }
 })

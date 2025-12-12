@@ -7,6 +7,7 @@ import { useDomUtil } from '@/utils/dom.util';
 import { useEventListener, useVModel } from '@vueuse/core';
 import type { ListCardProps, ListItem, Pagination } from '@/types/components/base.type';
 import DateUtil from '@/utils/date.util';
+import type VLoadingVue from '../global/VLoading.vue';
 
 
 const props = withDefaults(defineProps<ListCardProps>(), {
@@ -37,9 +38,8 @@ const emit = defineEmits<{
 /** ---------- 响应式数据 ---------- */
 const listData = useVModel(props, 'data', emit);
 // 页面数据
-const total = ref<number>(props.total ?? 0);
-const currentPage = useVModel(props, 'currentPage', emit, {defaultValue: 1}) as Ref<number>;
-const pageSize = useVModel(props, 'pageSize', emit, {defaultValue: 10}) as Ref<number>;
+const currentPage = useVModel(props, 'currentPage', emit) as Ref<number>;
+const pageSize = useVModel(props, 'pageSize', emit) as Ref<number>;
 // 其他数据
 const headerBtnSize = ref<'default' | 'small'>('default');
 const originalData = ref<ListItem[]>([...props.data]);
@@ -178,114 +178,123 @@ onMounted(() => {
         </template>
       </CardHeader>
       <div class="list-card__body">
-        <el-table 
-          :data="data" 
-          border 
-          style="width: 100%"
-        >
-          <!-- 选择列 -->
-          <el-table-column
-            width="40"
+        <Transition name="loading-fade">
+          <el-table 
+            :data="data" 
+            border 
+            style="width: 100%"
+            v-if="!loading"
           >
-            <template #header>
-              <el-checkbox 
-                v-model="isAllSelected"
-                @change="handleHeaderCheckboxChange"
-                :indeterminate="isIndeterminate"
-              />
-            </template>
-            <template #default="scope">
-              <el-checkbox 
-                v-model="scope.row.isSelected"
-                @change="handleCheckboxChange()"
-              />
-            </template>
-          </el-table-column>
-          <!-- 表格列 -->
-          <el-table-column 
-            v-for="column in columns" 
-            :key="column.prop"
-            :label="column.label"
-            :prop="column.prop"
-            :min-width="column.width"
-            align="center"
-          >
-            <template #default="scope">
-              <!-- 自定义渲染函数 -->
-              <template v-if="column.render">
-                {{ column.render(scope.row) }}
-              </template>
-              <!-- 名称列特殊处理 -->
-              <template v-else-if="column.prop === 'name'">
-                <el-tag type="primary" effect="light">{{ scope.row[column.prop] }}</el-tag>
-              </template>
-              <!-- 状态列特殊处理 -->
-              <template v-else-if="column.prop === 'status'">
-                <el-tag 
-                  :type="scope.row.status ? 'success' : 'danger'"
-                  effect="light"
-                >
-                  {{ scope.row.status ? '正常' : '禁用' }}
-                </el-tag>
-              </template>
-              <!-- 封面列特殊处理 -->
-              <template v-else-if="column.prop==='cover'">
-                <el-image
-                  :src="scope.row.cover"
-                  style="width: 100px; height: 100px"
-                  lazy
+            <!-- 选择列 -->
+            <el-table-column
+              width="40"
+            >
+              <template #header>
+                <el-checkbox 
+                  v-model="isAllSelected"
+                  @change="handleHeaderCheckboxChange"
+                  :indeterminate="isIndeterminate"
                 />
               </template>
-              <template v-else-if="['createdAt', 'updatedAt'].includes(column.prop)">
-                {{ DateUtil.format(scope.row[column.prop]) }}
+              <template #default="scope">
+                <el-checkbox 
+                  v-model="scope.row.isSelected"
+                  @change="handleCheckboxChange()"
+                />
               </template>
-              <!-- 默认渲染 -->
-              <template v-else>
-                {{ scope.row[column.prop] }}
-              </template>
-            </template>
-          </el-table-column>
-          <!-- 操作列 -->
-          <el-table-column 
-            v-if="showActionColumn && actionColumnConfig?.actions?.length"
-            :label="actionColumnConfig.label" 
-            :width="actionColumnConfig.width"
-            align="center"
-            fixed="right"
-          >
-            <template #default="scope">
-              <div class="list-card__options">
-                <template v-for="action in actionColumnConfig.actions" :key="action.name">
-                  <el-tooltip 
-                    :content="action.tooltip" 
-                    placement="bottom"
-                  >
-                    <el-button
-                      @click.stop="handleActionClick(action, scope.row)"
-                      :disabled="action.disabled ? action.disabled(scope.row) : false"
-                      class="list-card__options-btn"
-                    >
-                      <template v-if="action.name==='toggleStatus'">
-                        <el-icon 
-                          class="tag-list__icon tag-list__icon--edit" 
-                        >
-                          <VIcon :name="scope.row.status==='active' ? 'play' : 'stop'"/>
-                        </el-icon>
-                      </template>
-                      <template v-else>
-                        <el-icon 
-                          class="tag-list__icon tag-list__icon--edit" 
-                        >
-                          <VIcon :name="action.icon"/>
-                        </el-icon>
-                      </template>
-                    </el-button>
-                  </el-tooltip>
+            </el-table-column>
+            <!-- 表格列 -->
+            <el-table-column 
+              v-for="column in columns" 
+              :key="column.prop"
+              :label="column.label"
+              :prop="column.prop"
+              :min-width="column.width"
+              align="center"
+            >
+              <template #default="scope">
+                <!-- 自定义渲染函数 -->
+                <template v-if="column.render">
+                  {{ column.render(scope.row) }}
                 </template>
-              </div>
-            </template>
-          </el-table-column>
-        </el-table>
+                <!-- 名称列特殊处理 -->
+                <template v-else-if="column.prop === 'name'">
+                  <el-tag type="primary" effect="light">{{ scope.row[column.prop] }}</el-tag>
+                </template>
+                <!-- 状态列特殊处理 -->
+                <template v-else-if="column.prop === 'status'">
+                  <el-tag 
+                    :type="scope.row.status==='active' ? 'success' : 'danger'"
+                    effect="light"
+                  >
+                    {{ scope.row.status==='active' ? '正常' : '禁用' }}
+                  </el-tag>
+                </template>
+                <!-- 封面列特殊处理 -->
+                <template v-else-if="column.prop==='cover'">
+                  <el-image
+                    :src="scope.row.cover"
+                    style="width: 100px; height: 100px"
+                    lazy
+                  />
+                </template>
+                <template v-else-if="['createdAt', 'updatedAt'].includes(column.prop)">
+                  {{ DateUtil.format(scope.row[column.prop]) }}
+                </template>
+                <!-- 默认渲染 -->
+                <template v-else>
+                  {{ scope.row[column.prop] }}
+                </template>
+              </template>
+            </el-table-column>
+            <!-- 操作列 -->
+            <el-table-column 
+              v-if="showActionColumn && actionColumnConfig?.actions?.length"
+              :label="actionColumnConfig.label" 
+              :width="actionColumnConfig.width"
+              align="center"
+              fixed="right"
+            >
+              <template #default="scope">
+                <div class="list-card__options">
+                  <template v-for="action in actionColumnConfig.actions" :key="action.name">
+                    <el-tooltip 
+                      :content="action.tooltip" 
+                      placement="bottom"
+                    >
+                      <el-button
+                        @click.stop="handleActionClick(action, scope.row)"
+                        :disabled="action.disabled ? action.disabled(scope.row) : false"
+                        class="list-card__options-btn"
+                      >
+                        <template v-if="action.name==='toggleStatus'">
+                          <el-icon 
+                            class="tag-list__icon tag-list__icon--edit" 
+                          >
+                            <VIcon :name="scope.row.status==='active' ? 'play' : 'stop'"/>
+                          </el-icon>
+                        </template>
+                        <template v-else>
+                          <el-icon 
+                            class="tag-list__icon tag-list__icon--edit" 
+                          >
+                            <VIcon :name="action.icon"/>
+                          </el-icon>
+                        </template>
+                      </el-button>
+                    </el-tooltip>
+                  </template>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div 
+            class="list-card__holder" 
+            v-else
+          >
+            <VLoading/>
+          </div>
+        </Transition>
         <!-- 分页 -->
         <div class="list-card__pagination" v-if="showPagination">
           <el-pagination 
@@ -323,6 +332,7 @@ onMounted(() => {
   --el-tag-border-color: var(--primary-weak);
 }
 :deep(.el-table) {
+  min-height: 630px;
   @include mix.radius(md);
   .cell {
     position: relative;
@@ -355,7 +365,17 @@ onMounted(() => {
     @include mix.container-style($p: 0, $r: md, $b: 1px solid var(--el-border-color), $o: hidden);
   }
   &__body {
+    position: relative;
+    min-height: 720px;
     @include mix.padding(lg);
+    @include mix.flex-box($d: column, $j: flex-end);
+  }
+  &__holder {
+    @include mix.position-style($p: absolute);
+    width: 100%;
+    min-height: 630px;
+    background-color: var(--surface-base);
+    @extend %flex-column-center;
   }
   &__options {
     height: 40px;

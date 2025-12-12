@@ -235,6 +235,27 @@ export const put = async <T = any>(
   });
 };
 
+// PATCH 请求
+export const patch = async <T = any>(
+  url: string,
+  data?: any,
+  config?: AxiosRequestConfig
+): Promise<T> => {
+  const req: AxiosRequestConfig = {
+    url,
+    method: 'patch',
+    ...config,
+  };
+
+  // 只有 data 不是 undefined 才加入 data 字段
+  // 补充：null 也需要传入 data（后端可能期望 {} 而非无字段）
+  if (data !== undefined) {
+    req.data = data === null ? {} : data;
+  }
+
+  return requestWithTrack<T>(req);
+};
+
 // DELETE 请求
 export const del = async <T = any>(
   url: string,

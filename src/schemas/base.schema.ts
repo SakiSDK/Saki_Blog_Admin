@@ -27,10 +27,10 @@ export const ResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   SuccessResponseSchema(dataSchema).or(ErrorResponseSchema);
 
 export const PaginationSchema = z.object({
-  total: z.number().int().nonnegative(), // 总条数：非负整数
-  page: z.number().int().positive(), // 当前页：正整数
-  pageSize: z.number().int().positive(), // 每页条数：正整数
-  totalPages: z.number().int().nonnegative().optional(), // 总页数：可选（根据后端实际返回调整）
+  total: z.number({ message: '必须是数字类型'}).int().nonnegative(), // 总条数：非负整数
+  page: z.number({ message: '必须是数字类型'}).int().positive().nonnegative(), // 当前页：正整数
+  pageSize: z.number({ message: '必须是数字类型'}).int().positive().nonnegative(), // 每页条数：正整数
+  totalPages: z.number({ message: '必须是数字类型'}).int().nonnegative().optional(), // 总页数：可选（根据后端实际返回调整）
   hasNext: z.boolean().optional(),
   hasPrev: z.boolean().optional(),
 });

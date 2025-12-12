@@ -1,5 +1,6 @@
 import type { FormRules } from 'element-plus';
 import type { UnwrapRef } from 'vue';
+import type { JSX } from 'vue/jsx-runtime';
 import { z } from 'zod';
 
 export interface Pagination {
@@ -47,6 +48,7 @@ export interface CardHeaderProps {
 /** ---------- 通用表单Config ---------- */
 export type FormFieldConfig<T = any> = {
   label: string;
+  labelWidth?: string;
   icon?: string;
   prop: keyof T & string;
   component: any; // 支持任意 Element Plus 表单组件
@@ -54,6 +56,12 @@ export type FormFieldConfig<T = any> = {
   hidden?: boolean; // 是否隐藏字段
   connector?: string;
   children?: Omit<FormFieldConfig<T>, 'children'>[];
+  /** 分组 */
+  group?: string;
+  /** 行号：row */
+  row?: number;
+  /** 自定义渲染函数 */
+  render?: (formData: Record<string, any>) => JSX.Element | string;
 };
 
 /** ---------- 通用组件CreateCard ---------- */
@@ -81,6 +89,7 @@ export type CreateCardProps<T = any> = {
   labelWidth?: string;
   /** 可选：标签位置（top/left） */
   labelPosition?: 'top' | 'left';
+  showGroupLabel?: boolean;
 };
 
 
@@ -117,6 +126,7 @@ export interface TableColumnField {
 }
 // 定义Props
 export interface ListCardProps {
+  loading: boolean;
   title: string; // 列表标题
   data: ListItem[]; // 列表数据
   columns: TableColumnField[];
@@ -152,4 +162,48 @@ export interface ListCardProps {
     disabled?: boolean;
     handler: () => void;
   }>;
+}
+
+// ------------- EditCard类型定义 -------------
+/** Props 类型 */
+export interface EditCardProps<T = any> {
+  /** 弹窗是否可见 (v-model 绑定) */
+  isShowEdit: boolean;
+  /** 弹窗标题 */
+  title?: string;
+  headerIcon?: string;
+  /** 初始表单数据 (支持 v-model 双向绑定) */
+  initialForm: T;
+  /** 表单字段配置 */
+  formFields: FormFieldConfig[];
+  /** Zod 校验 Schema */
+  formSchema: z.ZodObject<z.ZodRawShape>;
+  /** 自定义校验规则 (优先级高于 Schema) */
+  customRules?: FormRules;
+  /** 弹窗宽度 */
+  width?: string | number;
+  /** 标签宽度 */
+  labelWidth?: string | number;
+  /** 标签位置 */
+  labelPosition?: 'left' | 'right' | 'top';
+  /** 是否显示取消按钮 */
+  showCancelBtn?: boolean;
+  /** 是否显示确认按钮 */
+  showConfirmBtn?: boolean;
+  /** 取消按钮文字 */
+  cancelText?: string;
+  /** 确认按钮文字 */
+  confirmText?: string;
+  /** 确认按钮是否禁用 */
+  confirmBtnDisabled?: boolean;
+  /** 是否点击遮罩层关闭 */
+  closeOnClickModal?: boolean;
+  /** 是否按ESC关闭 */
+  closeOnPressEscape?: boolean;
+  /** 是否显示关闭按钮 */
+  showCloseBtn?: boolean;
+  /** 是否全屏显示 (移动端自动生效) */
+  fullscreen?: boolean;
+  /** 是否自动重置表单 (弹窗关闭时) */
+  autoReset?: boolean;
 }

@@ -94,6 +94,11 @@ export const TagListParamsSchema = z.object({
   keyword: zStr.max(50, "搜索关键词不能超过 50 个字符").optional().describe('搜索关键词'),
   sort: zSort.optional(),
 })
+// 普通返回标签的响应Schema
+export const TagStatusResponseSchema = ResponseSchema(TagSchema);
+export const TagStatusParamsSchema = z.object({
+  id: zId.describe('标签ID'),
+})
 
 
 export type TagFormType = z.infer<typeof tagFormSchema>;
@@ -105,6 +110,8 @@ export type Tag = z.infer<typeof TagSchema>;
 
 /** ---------- Response返回类型 ---------- */
 export type TagListResponse = z.infer<typeof TagListResponseSchema>
+export type TagStatusResponse = z.infer<typeof TagStatusResponseSchema>
 
 /** ---------- params请求类型 ---------- */
 export type TagListParams = z.infer<typeof TagListParamsSchema>
+export type TagStatusParams = z.infer<typeof TagStatusParamsSchema>
