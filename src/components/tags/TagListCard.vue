@@ -86,15 +86,22 @@ const handleDelete = async (row: Tag) => {
         type: 'warning'
       }
     );
-    
-    // 执行删除逻辑
-    const index = tagList.value.findIndex(tag => tag.id === row.id);
-    if (index !== -1) {
-      tagList.value.splice(index, 1);
-      ElMessage.success('标签删除成功');
+    const res = await tagStore.deleteTag(row.id, true);
+    if (res.success) {
+      ElMessage({
+        message: res.message || '删除成功',
+        type: 'success'
+      });
+      // 执行删除逻辑
+      const index = tagList.value.findIndex(tag => tag.id === row.id);
+      if (index !== -1) {
+        tagList.value.splice(index, 1);
+      }
+    } else {
+      throw new Error(res.message);
     }
-  } catch {
-    ElMessage.info('已取消删除操作');
+  } catch(error: any) {
+    ElMessage.error(error.message || error || '删除失败');
   }
 };
 
@@ -127,35 +134,41 @@ const handleToggleStatus = async (row: Tag) => {
         }
       );
     }
-  } catch(err: any) {
-    ElMessage.error(`操作失败：${err.message || err}`);
+  } catch(error: any) {
+    ElMessage.error(`操作失败：${error.message || error}`);
   }
 };
 
 // 批量删除
-const handleBulkDelete = () => {
+const handleBulkDelete = async () => {
   if (selectedRows.value.length === 0) {
     ElMessage.warning('请先选择要删除的标签');
     return;
   }
-  
-  ElMessageBox.confirm(
-    `确定要删除选中的 ${selectedRows.value.length} 个标签吗?`,
-    '批量删除',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(() => {
+  try {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedRows.value.length} 个标签吗?`,
+      '批量删除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
     // 执行批量删除
     const selectedIds = selectedRows.value.map(row => row.id);
-    tagList.value = tagList.value.filter(tag => !selectedIds.includes(tag.id));
-    selectedRows.value = [];
-    ElMessage.success(`成功删除 ${selectedIds.length} 个标签`);
-  }).catch(() => {
-    ElMessage.info('已取消批量删除操作');
-  });
+    console.log(selectedIds);
+    const res = await tagStore.bulkDeleteTag(selectedIds);
+    if (res.success) {
+      tagList.value = tagList.value.filter(tag => !selectedIds.includes(tag.id));
+      selectedRows.value = [];
+      ElMessage.success(`成功删除 ${selectedIds.length} 个标签`);
+    } else {
+      throw new Error(res.message);
+    }
+  } catch (error: any) {
+    ElMessage.error(`操作失败：${error.message || error}`);
+  }
 };
 
 // 操作列配置
@@ -198,7 +211,7 @@ const headerActions = [
     icon: 'trush',
     type: 'danger' as const,
     handler: handleBulkDelete,
-    disabled:  computed(() => selectedRows.value.length === 0).value
+    disabled: computed(() => selectedRows.value.length === 0),
   },
 ];
 
@@ -221,6 +234,10 @@ watch(
     await tagStore.fetchTagList({ page, pageSize }, true)
   }
 )
+watch(selectedRows, (val) => {
+  // 监听选中行变化
+  console.log('选中行变化：', val);
+});
 </script>
 
 <template>
@@ -230,7 +247,7 @@ watch(
       title="标签列表"
       icon="list"
       :data="tagList"
-      :selected-rows="selectedRows"
+      v-model:selected-rows="selectedRows"
       :columns="tableColumns"
       :show-selection="true"
       :show-pagination="true"

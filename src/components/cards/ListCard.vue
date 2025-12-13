@@ -2,12 +2,11 @@
 import { ElMessage, ElMessageBox } from 'element-plus';
 import CardHeader from '@/components/bases/CardHeader.vue'
 import VIcon from '../global/VIcon.vue';
-import { onMounted, ref, watch, type Ref } from 'vue';
+import { onMounted, ref, unref, watch, type Ref } from 'vue';
 import { useDomUtil } from '@/utils/dom.util';
 import { useEventListener, useVModel } from '@vueuse/core';
 import type { ListCardProps, ListItem, Pagination } from '@/types/components/base.type';
 import DateUtil from '@/utils/date.util';
-import type VLoadingVue from '../global/VLoading.vue';
 
 
 const props = withDefaults(defineProps<ListCardProps>(), {
@@ -147,12 +146,16 @@ onMounted(() => {
         <template #actions>
           <div class="list-card-header__options">
             <!-- 头部操作按钮 -->
-            <div class="list-card-header__options-btn" v-for="action in headerActions" :key="action.name">
+            <div 
+              class="list-card-header__options-btn" 
+              v-for="action in headerActions" 
+              :key="action.name"
+            >
               <el-button 
                 :type="action.type" 
                 :size="action.size || headerBtnSize"
                 @click="handleHeaderActionClick(action)"
-                :disabled="action.disabled"
+                :disabled="unref(action.disabled)"
               >
                 <span class="list-card-header__options-icon" v-if="action.icon">
                   <VIcon :name="action.icon"/>

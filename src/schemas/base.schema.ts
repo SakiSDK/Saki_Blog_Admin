@@ -5,7 +5,7 @@ import { z } from 'zod';
 /** 成功响应的基础结构 */
 export const SuccessResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) => {
   return z.object({
-    code: z.literal(200),
+    code: z.number(),
     success: z.literal(true),
     message: z.string().optional(),
     data: dataSchema,

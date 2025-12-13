@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { zId, zPageNum, zPageSize, zSort, zStr } from './common.schema';
 import { PaginationSchema, ResponseSchema } from './base.schema';
 
+
 /** ---------- 返回值Tag类型 ---------- */
 const TagSchema = z.object({
   id: zId.describe("标签ID"),
@@ -25,10 +26,10 @@ const TagSchema = z.object({
     .min(0, "文章数量不能小于 0")
     .describe("文章数量"),
   order: z
-    .number("排序必须是数字")
-    .int("排序必须是整数")
-    .min(0, "排序不能小于 0")
-    .describe("排序"),
+    .number("优先级必须是数字")
+    .int("优先级必须是整数")
+    .min(0, "优先级不能小于 0")
+    .describe("优先级"),
   status: z.enum(['active', 'inactive'] as const),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -40,9 +41,12 @@ export const tagFormSchema = z.object({
     .max(50, { message: '标签名称不能超过50个字符' })
     .trim()
     .nonempty({ message: '标签名称不能为空' }),
-  description: zStr
-    .max(200, { message: '标签描述不能超过200个字符' })
+  description: z
+    .string('必须是文本')
     .trim()
+    .max(50, { message: '标签描述不能超过50个字符' })
+    .or(z.literal(""))
+    .nullable()
     .optional(),
   order: z.number()
     .int()
@@ -50,7 +54,9 @@ export const tagFormSchema = z.object({
     .max(999, { message: '排序值不能大于999' })
     .default(0)
     .optional(),
+  status: z.enum(['active', 'inactive'] as const),
 })
+
 export const tagSearchFormSchema = z.object({
   keyword: zStr
     .max(50, { message: '标签名称不能超过50个字符' })
@@ -61,6 +67,7 @@ export const tagSearchFormSchema = z.object({
   startTime: z.date().optional(),
   endTime: z.date().optional(),
 })
+
 export const tagUpdateFormSchema = z.object({
   name: zStr
     .max(50, { message: '标签名称不能超过50个字符' })
@@ -87,20 +94,30 @@ export const TagListDataSchema = z.object({
 
 /** ---------- 标签列表完整响应 Schema + 类型推导 ---------- */
 // 组合出标签列表接口的完整响应 Schema
-export const TagListResponseSchema = ResponseSchema(TagListDataSchema);
+
 export const TagListParamsSchema = z.object({
   page: zPageNum.default(1).optional().describe('页码'),
   pageSize: zPageSize.optional().describe('每页数量'),
   keyword: zStr.max(50, "搜索关键词不能超过 50 个字符").optional().describe('搜索关键词'),
   sort: zSort.optional(),
 })
+export const TagStatusParamsSchema = zId.describe('标签ID');
+export const TagDeleteParamsSchema = zId.describe('标签ID');
+export const TagBulkDeleteParamsSchema = z.array(zId.describe('标签ID')).describe('标签ID列表');
+
+
 // 普通返回标签的响应Schema
+export const TagListResponseSchema = ResponseSchema(TagListDataSchema);
+
 export const TagStatusResponseSchema = ResponseSchema(TagSchema);
-export const TagStatusParamsSchema = z.object({
-  id: zId.describe('标签ID'),
-})
+
+export const TagCreateResponseSchema = ResponseSchema(TagSchema);
+
+export const TagDeleteResponseSchema = ResponseSchema(z.null());
 
 
+
+/** ---------- Tag表单类型 ---------- */
 export type TagFormType = z.infer<typeof tagFormSchema>;
 export type TagSearchFormType = z.infer<typeof tagSearchFormSchema>;
 export type TagUpdateFormType = z.infer<typeof tagUpdateFormSchema>;
@@ -111,7 +128,10 @@ export type Tag = z.infer<typeof TagSchema>;
 /** ---------- Response返回类型 ---------- */
 export type TagListResponse = z.infer<typeof TagListResponseSchema>
 export type TagStatusResponse = z.infer<typeof TagStatusResponseSchema>
+export type TagCreateResponse = z.infer<typeof TagCreateResponseSchema>
+export type TagDeleteResponse = z.infer<typeof TagDeleteResponseSchema>
 
 /** ---------- params请求类型 ---------- */
 export type TagListParams = z.infer<typeof TagListParamsSchema>
 export type TagStatusParams = z.infer<typeof TagStatusParamsSchema>
+export type TagCreateBody = z.infer<typeof tagFormSchema>

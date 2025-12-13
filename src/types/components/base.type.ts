@@ -1,8 +1,10 @@
 import type { FormRules } from 'element-plus';
-import type { UnwrapRef } from 'vue';
+import type { ComputedRef, Ref, UnwrapRef } from 'vue';
 import type { JSX } from 'vue/jsx-runtime';
 import { z } from 'zod';
 
+
+export type MaybeRef<T> = T | Ref<T> | ComputedRef<T>;
 export interface Pagination {
   total?: number;         // 数据总数
   currentPage?: number;   // 当前页码
@@ -159,7 +161,10 @@ export interface ListCardProps {
     icon: string;
     type?: 'primary' | 'success' | 'warning' | 'danger' | 'info';
     size?: 'default' | 'small';
-    disabled?: boolean;
+    /** 是否禁用（支持响应式） */
+    disabled?: MaybeRef<boolean>;
+    /** 是否显示（支持响应式，预留） */
+    visible?: MaybeRef<boolean>;
     handler: () => void;
   }>;
 }

@@ -4,13 +4,18 @@ import type { TagFormType } from '@/types/schemas/tag.type';
 import { tagFormSchema } from '@/schemas/tag.schema';
 import CreateCard from '../cards/CreateCard.vue';
 import type { FormFieldConfig } from '@/types/components/base.type';
+import { useTagStore } from '@/stores/tag.store';
 
+
+/** ---------- 状态管理 ---------- */
+const tagStore = useTagStore();
 
 // 定义初始表单数据
 const initialForm: TagFormType = {
   name: '',
   description: '',
-  order: 0
+  order: 0,
+  status: 'active'
 };
 // 定义表单字段配置
 const tagFormFields:FormFieldConfig[] = [
@@ -65,11 +70,11 @@ const tagFormFields:FormFieldConfig[] = [
       options: [
         {
           label: '正常',
-          value: 1
+          value: 'active'
         },
         {
           label: '禁用',
-          value: 0
+          value: 'inactive'
         }
       ]
     }
@@ -79,9 +84,12 @@ const tagFormFields:FormFieldConfig[] = [
 const handleTagSubmit = async (formData: TagFormType) => {
   try {
     // 模拟接口提交
-    console.log('提交标签数据：', formData);
-    ElMessage.success('标签创建成功！');
-    // 实际项目中替换为接口请求：await tagApi.create(formData)
+    const res = await tagStore.createTag(formData);
+    if (res.success) {
+      ElMessage.success('标签创建成功！');
+    } else {
+      throw new Error(res.message);
+    }
   } catch (error) {
     ElMessage.error('标签创建失败！');
     console.error('提交失败：', error);

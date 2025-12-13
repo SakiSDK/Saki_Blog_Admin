@@ -1,10 +1,29 @@
-import { defineStore } from 'pinia';
-import { ref, computed, watch } from 'vue';
-import { TagApi } from '@/apis/tag.api';
-import { ErrorResponseSchema, type ErrorResponse, type Pagination } from '@/schemas/base.schema';
-import type { AxiosRequestConfig } from 'axios';
-import { useTimeoutFn } from '@vueuse/core';
-import type { Tag, TagListParams, TagListResponse, TagStatusResponse } from '@/schemas/tag.schema';
+import {
+  defineStore
+} from 'pinia';
+import {
+  ref, computed
+} from 'vue';
+import {
+  TagApi
+} from '@/apis/tag.api';
+import {
+  ErrorResponseSchema,
+  type ErrorResponse,
+  type Pagination
+} from '@/schemas/base.schema';
+import type {
+  AxiosRequestConfig
+} from 'axios';
+import {
+  useTimeoutFn
+} from '@vueuse/core';
+import type {
+  Tag, TagCreateResponse, TagDeleteResponse, TagFormType,
+  TagListParams, TagListResponse,
+  TagStatusResponse
+} from '@/schemas/tag.schema';
+import { del } from '@/utils/request.util';
 
 
 
@@ -25,7 +44,6 @@ export const useTagStore = defineStore('tag', () => {
   const errorMsg = ref<string | null>(null);
   const currentParams = ref<TagListParams>({});
   const errorCode = ref<number | null>(null);
-  const isSuccessful = ref<boolean>(false);
   const isPageReloaded = ref<boolean>(false);
 
   /** ---------- 计算属性 ---------- */
@@ -63,14 +81,12 @@ export const useTagStore = defineStore('tag', () => {
     isLoading.value = true
     errorMsg.value = null
     // 开始前重置是成功状态
-    isSuccessful.value = false;
     try {
       const shouldUseCache = !isRefresh && !isPageReloaded.value && tagList.value.length > 0;
       if (shouldUseCache) {
         useTimeoutFn(() => {
           isLoading.value = false;
         }, 500)
-        isSuccessful.value = true;
         return {
           success: true,
           code: 200,
@@ -89,7 +105,6 @@ export const useTagStore = defineStore('tag', () => {
       currentParams.value = unitParams;
       const response = await TagApi.getTagList(unitParams, config);
       if (response.success) {
-        isSuccessful.value = true;
         if (isRefresh) {
           tagList.value = response.data.list
         } else {
@@ -97,7 +112,6 @@ export const useTagStore = defineStore('tag', () => {
         }
         pagination.value = response.data.pagination
       } else {
-        isSuccessful.value = false;
         const errorRes = ErrorResponseSchema.parse(response) as ErrorResponse;
         errorMsg.value = `[${errorRes.code}] ${errorRes.message}`
         // 3. 分类错误处理（根据错误码做特殊逻辑）
@@ -126,7 +140,6 @@ export const useTagStore = defineStore('tag', () => {
       // 捕获两类错误：
       // 1. API 响应的业务错误（上面抛出的）
       // 2. 网络错误、校验错误（如响应格式不符合成功/失败规范）
-      isSuccessful.value = false;
       if (error instanceof Error) {
         errorMsg.value = error.message;
       } else {
@@ -183,6 +196,104 @@ export const useTagStore = defineStore('tag', () => {
     }
   }
 
+  /** 
+   * 创建Tag
+   */
+  const createTag = async (
+    tag: TagFormType,
+    config?: AxiosRequestConfig
+  ): Promise<TagCreateResponse> => {
+    try {
+      const res = await TagApi.createTag(tag, config);
+      if (!res.success) {
+        const errorRes = ErrorResponseSchema.parse(res) as ErrorResponse;
+        errorMsg.value = `[${errorRes.code}] ${errorRes.message}`;
+
+        // 返回失败响应结构
+        return {
+          success: false,
+          code: errorRes.code,
+          message: errorRes.message,
+          data: null,
+        } as TagCreateResponse;
+      }
+      tagList.value.unshift(res.data);
+      tagList.value.pop();
+      // 成功则返回原始响应
+      return res;
+    } catch (error) {
+      errorMsg.value = '创建标签失败，请检查网络或联系管理员';
+
+      // 构造兜底失败响应
+      const fallbackResponse: TagCreateResponse = {
+        success: false,
+        code: 500,
+        message: error instanceof Error ? error.message : '未知错误',
+        data: null,
+      };
+
+      console.error('❌ 标签创建失败：', error);
+      return fallbackResponse;
+    }
+  };
+
+  const deleteTag = async (
+    id: number,
+    isRefresh?: boolean,
+    config?: AxiosRequestConfig
+  ): Promise<TagDeleteResponse> => { 
+    try {
+      const res = await TagApi.deleteTag(id, config);
+      if (isRefresh && res.success) {
+        await fetchTagList(currentParams.value, true);
+      }
+      return res;
+    } catch (error) {
+      // 统一兜底返回格式，确保始终满足 TagStatusResponse 结构
+      const fallbackResponse: TagStatusResponse = {
+        success: false,
+        code: 500,
+        message: '操作失败',
+        data: null
+      };
+      if (error instanceof Error) {
+        fallbackResponse.message = error.message;
+      }
+      console.error('❌ 标签状态切换失败：', error);
+      return fallbackResponse;
+    }
+  }
+
+  /** 
+   * 批量删除Tag
+   */
+  const bulkDeleteTag = async (
+    ids: number[],
+    isRefresh?: boolean,
+    config?: AxiosRequestConfig
+  ): Promise<TagDeleteResponse> => { 
+    try {
+      const res = await TagApi.bulkDeleteTag(ids, config);
+      if (isRefresh && res.success) {
+        await fetchTagList(currentParams.value, true);
+      }
+      return res;
+    }catch (error) {
+      // 统一兜底返回格式，确保始终满足 TagStatusResponse 结构
+      const fallbackResponse: TagStatusResponse = {
+        success: false,
+        code: 500,
+        message: '操作失败',
+        data: null
+      };
+      if (error instanceof Error) {
+        fallbackResponse.message = error.message;
+      }
+      console.error('❌ 批量删除标签失败：', error);
+      return fallbackResponse;
+    }
+  }
+
   return {
     /** ---------- 数据 ---------- */
     tagList,
@@ -192,7 +303,6 @@ export const useTagStore = defineStore('tag', () => {
     errorMsg,
     currentParams,
     errorCode,
-    isSuccessful,
     isPageReloaded,
     /** ---------- 计算属性 ---------- */
     getTagTotal,
@@ -205,5 +315,8 @@ export const useTagStore = defineStore('tag', () => {
     resetState,
     fetchTagList,
     toggleTagStatus,
+    createTag,
+    deleteTag,
+    bulkDeleteTag,
   }
 })

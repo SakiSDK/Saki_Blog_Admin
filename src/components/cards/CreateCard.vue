@@ -86,7 +86,8 @@ const handleSubmit = async () => {
     // 先执行 Element Plus 表单校验
     await formRef.value.validate();
     // 执行外部提交回调
-    await props.onSubmit(form);
+    await props.onSubmit(form) as any;
+    resetForm();
   } catch (error) {
     console.error('表单校验失败：', error);
     // 可扩展：全局错误提示（如 ElMessage）
