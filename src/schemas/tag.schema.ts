@@ -69,13 +69,16 @@ export const tagSearchFormSchema = z.object({
 })
 
 export const tagUpdateFormSchema = z.object({
+  id: zId.describe('标签ID'),
   name: zStr
     .max(50, { message: '标签名称不能超过50个字符' })
     .trim()
     .nonempty({ message: '标签名称不能为空' }),
   description: zStr
-    .max(200, { message: '标签描述不能超过200个字符' })
+    .max(50, { message: '标签描述不能超过50个字符' })
     .trim()
+    .or(z.literal(""))
+    .nullable()
     .optional(),
   order: z.number()
     .int()
@@ -83,7 +86,7 @@ export const tagUpdateFormSchema = z.object({
     .max(999, { message: '排序值不能大于999' })
     .default(0)
     .optional(),
-  sort: z.enum(['asc', 'desc']).optional(),
+  status: z.enum(['active', 'inactive']).optional(),
 })
 
 
@@ -115,6 +118,8 @@ export const TagCreateResponseSchema = ResponseSchema(TagSchema);
 
 export const TagDeleteResponseSchema = ResponseSchema(z.null());
 
+export const TagUpdateResponseSchema = ResponseSchema(TagSchema);
+
 
 
 /** ---------- Tag表单类型 ---------- */
@@ -130,6 +135,7 @@ export type TagListResponse = z.infer<typeof TagListResponseSchema>
 export type TagStatusResponse = z.infer<typeof TagStatusResponseSchema>
 export type TagCreateResponse = z.infer<typeof TagCreateResponseSchema>
 export type TagDeleteResponse = z.infer<typeof TagDeleteResponseSchema>
+export type TagUpdateResponse = z.infer<typeof TagUpdateResponseSchema>;
 
 /** ---------- params请求类型 ---------- */
 export type TagListParams = z.infer<typeof TagListParamsSchema>

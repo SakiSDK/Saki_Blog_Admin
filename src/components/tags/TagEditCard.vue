@@ -2,21 +2,18 @@
 import { ref } from 'vue'
 import EditCard from '../cards/EditCard.vue';
 import { ElInput, ElInputNumber, ElSelect } from 'element-plus';
-import { tagUpdateFormSchema } from '@/schemas/tag.schema';
+import { tagUpdateFormSchema, type TagFormType, type TagUpdateFormType } from '@/schemas/tag.schema';
 import { useStateStore } from '@/stores/state.store';
 import { storeToRefs } from 'pinia';
-import type { TagUpdateFormType } from '@/types/schemas/tag.type'
+import { useTagStore } from '@/stores/tag.store';
 
 
 /** ---------- Tag编辑状态 ---------- */
-const tagStore = useStateStore();
-const { isTagEditDialogVisible } = storeToRefs(tagStore);
+const stateStore = useStateStore();
+const { isTagEditDialogVisible } = storeToRefs(stateStore);
+const tagStore = useTagStore();
+const { selectedTag } = storeToRefs(tagStore);
 
-const initialForm: TagUpdateFormType = {
-  name: '',
-  description: '',
-  order: 0,
-}
 // 表单字段配置
 const formFields = ref([
   {
@@ -53,11 +50,11 @@ const formFields = ref([
       clearable: true,
       options: [
         {
-          label: '激活',
+          label: '正常',
           value: 'active'
         },
         {
-          label: '未激活',
+          label: '禁用',
           value: 'inactive'
         }
       ]
@@ -76,6 +73,19 @@ const formFields = ref([
   }
 ]);
 
+
+// 包装updateTag方法
+const handleConfirm = async (formData: Record<string, any>) => {
+  if (!selectedTag.value?.id) return;
+  const payload: TagUpdateFormType = {
+    id: selectedTag.value.id,
+    name: formData.name ?? '',
+    description: formData.description,
+    order: formData.order,
+    status: formData.status
+  };
+  const res = await tagStore.updateTag(payload);
+}
 </script>
 
 <template>
@@ -85,10 +95,11 @@ const formFields = ref([
       headerIcon="edit"
       label-position="top"
       :show-close-btn="false"
-      :initialForm="initialForm"
+      :initialForm="selectedTag || {}"
       :formFields="formFields"
       :formSchema="tagUpdateFormSchema"
       v-model:is-show-edit="isTagEditDialogVisible"
+      @confirm="handleConfirm"
     />
   </div>
 </template>

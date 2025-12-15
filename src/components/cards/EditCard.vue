@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { type FormInstance, type FormRules } from 'element-plus';
-import { ref, reactive, computed} from 'vue';
+import { ref, reactive, computed, watch, unref} from 'vue';
 import { z } from 'zod';
 import { useVModel } from '@vueuse/core';
 import { zodValidator } from '@/utils/validate.util';
@@ -16,7 +16,7 @@ interface EditCardEmits {
   /** 展示状态 */
   (e: 'update:isShowEdit', value: boolean): void;
   /** 确认提交 */
-  (e: 'confirm', formData: Record<string, any>): void;
+  (e: 'confirm', formData: Record<string, any>): Promise<void>;
   /** 取消操作 */
   (e: 'cancel'): void;
   /** 弹窗关闭 */
@@ -85,6 +85,7 @@ const handleConfirm = async () => {
   try {
     // 先执行 Element Plus 表单校验
     await formRef.value.validate();
+    console.log('开始提交表单')
     // 执行外部提交回调
     emits('confirm', form);
     // 关闭弹窗
@@ -110,6 +111,17 @@ const resetForm = () => {
 const dialogFullscreen = computed(() => {
   return props.fullscreen;
 });
+
+watch(
+  () => props.initialForm,
+  (val) => {
+    Object.assign(form, val)
+  },
+  {
+    deep: true,
+    immediate: true
+  }
+)
 </script>
 
 <template>
@@ -138,7 +150,7 @@ const dialogFullscreen = computed(() => {
     </template>
     <el-form 
       ref="formRef" 
-      :model="form" 
+      :model="unref(form)" 
       :rules="rules" 
       :label-width="labelWidth"
       :label-position="labelPosition"

@@ -130,11 +130,6 @@ watch(() => navigator.route?.path, (newPath) => {
         @select="handleMenuSelect"
         class="aside__menu"
       >
-        <Transition name="title-fade">
-          <div class="aside__title" v-if="!isCollapsedAsideBar">
-            主导航
-          </div>
-        </Transition>
         <template v-for="item in menuItems" :key="item.index">
           <!-- 有子菜单的项 -->
           <el-sub-menu
@@ -181,12 +176,6 @@ watch(() => navigator.route?.path, (newPath) => {
             </template>
           </el-menu-item>
         </template>
-        <!-- 系统设置部分 -->
-        <Transition name="title-fade">
-          <div class="aside__title" v-if="!isCollapsedAsideBar">
-            系统设置
-          </div>
-        </Transition>
         <el-sub-menu 
           :index="systemSettings.index"
         > 

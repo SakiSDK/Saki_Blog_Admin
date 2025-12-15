@@ -21,9 +21,10 @@ import {
 import type {
   Tag, TagCreateResponse, TagDeleteResponse, TagFormType,
   TagListParams, TagListResponse,
-  TagStatusResponse
+  TagStatusResponse,
+  TagUpdateFormType,
+  TagUpdateResponse
 } from '@/schemas/tag.schema';
-import { del } from '@/utils/request.util';
 
 
 
@@ -38,6 +39,8 @@ export const useTagStore = defineStore('tag', () => {
     hasNext: false,
     hasPrev: false,
   })
+  const selectedTag = ref<TagUpdateFormType | null>(null);
+
 
   /** ---------- 状态 ---------- */
   const isLoading = ref<boolean>(false);
@@ -294,10 +297,53 @@ export const useTagStore = defineStore('tag', () => {
     }
   }
 
+  /**
+   * 编辑标签
+   */
+  const updateTag = async (
+    formData: TagUpdateFormType,
+    config?: AxiosRequestConfig
+  ): Promise<TagUpdateResponse> => { 
+    try {
+      console.log('formData', formData)
+      const {id, ...data} = formData;
+      const res = await TagApi.updateTag(id, data as TagFormType, config);
+      if (!res.success) {
+        const errorRes = ErrorResponseSchema.parse(res) as ErrorResponse;
+        errorMsg.value = `[${errorRes.code}] ${errorRes.message}`;
+      } else {
+        tagList.value = tagList.value.map((tag) => {
+          if (tag.id === id) {
+            return {
+              ...tag,
+              ...data,
+            };
+          }
+          return tag;
+        });
+      }
+      return res;
+    } catch (error) {
+      // 统一兜底返回格式，确保始终满足 TagStatusResponse 结构
+      const fallbackResponse: TagStatusResponse = {
+        success: false,
+        code: 500,
+        message: '操作失败',
+        data: null
+      };
+      if (error instanceof Error) {
+        fallbackResponse.message = error.message;
+      }
+      console.error('❌ 更新标签失败：', error);
+      return fallbackResponse;
+    }
+  }
+
   return {
     /** ---------- 数据 ---------- */
     tagList,
     pagination,
+    selectedTag,
     /** ---------- 状态 ---------- */
     isLoading,
     errorMsg,
@@ -318,5 +364,6 @@ export const useTagStore = defineStore('tag', () => {
     createTag,
     deleteTag,
     bulkDeleteTag,
+    updateTag,
   }
 })

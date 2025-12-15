@@ -61,7 +61,6 @@ watch(() => props.data, (newDate) => {
 const updateSelectedRows = () => {
   const allSelected = listData.value.filter(row => row.isSelected);
   selectedRows.value = allSelected;
-
   // 更新全选状态
   const totalItems = listData.value.length;
   const selectedCount = allSelected.length;
@@ -102,9 +101,12 @@ const handleActionClick = (action: any, row: ListItem) => {
   }
 }
 // 处理头部按钮点击
-const handleHeaderActionClick = (action: any) => {
-  if (action.disabled) return;
-  action.handler();
+const handleHeaderActionClick = async (action: any) => {
+  if (unref(action.disabled)) return;
+  await action.handler();
+  if (action.label === 'delete') {
+    updateSelectedRows()
+  }
 };
 // 处理刷新逻辑
 const handleRefresh = () => {

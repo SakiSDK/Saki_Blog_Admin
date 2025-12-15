@@ -6,9 +6,10 @@ import FooterBar from './components/global/FooterBar.vue';
 import TopBar from './components/global/TopBar.vue';
 import { useStateStore } from './stores/state.store';
 import { animate, stagger, splitText } from 'animejs';
-import { nextTick, onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { waitForAllRequests } from './utils/apiTracker.util';
-import { useEventListener } from '@vueuse/core';
+import { useEventListener, useScrollLock } from '@vueuse/core';
+
 
 
 const domReady = ref(false); // 标记 DOM 是否加载完成
@@ -35,7 +36,6 @@ useEventListener('DOMContentLoaded', () => {
   domReady.value = true;
   checkAllReady(); // 检查是否可以隐藏全局加载
 });
-
 
 const svg = 
 `
@@ -66,6 +66,15 @@ onMounted(async() => {
     loop: true,
     delay: stagger(100),
   })
+  const el = document.querySelector<HTMLElement>('.app__main');
+  const isLocked = useScrollLock(el);
+  watch(
+    () => stateStore.isGlobalLoading || stateStore.isRouteLoading,
+    (val) => {
+      isLocked.value = val
+    },
+    { immediate: true }
+  )
   await waitForApis();
 })
 </script>
@@ -84,9 +93,7 @@ onMounted(async() => {
           <AsideBar/>
         </el-aside>
         <el-container>
-          <el-main 
-            class="app__main" 
-          >
+          <el-main class="app__main">
             <Transition name="loading-fade">
               <div 
                 class="app__mask"
@@ -136,8 +143,10 @@ onMounted(async() => {
   }
   &__main {
     position: relative;
+    height: 100%;
     @include mix.padding(0);
     max-height: calc(100vh - 60px);
+    overflow: auto;
     @include mix.respond-down(xs) {
       max-height: calc(100vh - 50px);
     }

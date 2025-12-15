@@ -171,14 +171,14 @@ export interface ListCardProps {
 
 // ------------- EditCard类型定义 -------------
 /** Props 类型 */
-export interface EditCardProps<T = any> {
+export interface EditCardProps {
   /** 弹窗是否可见 (v-model 绑定) */
   isShowEdit: boolean;
   /** 弹窗标题 */
   title?: string;
   headerIcon?: string;
   /** 初始表单数据 (支持 v-model 双向绑定) */
-  initialForm: T;
+  initialForm: Record<string, any>;
   /** 表单字段配置 */
   formFields: FormFieldConfig[];
   /** Zod 校验 Schema */

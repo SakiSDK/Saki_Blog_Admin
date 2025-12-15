@@ -11,7 +11,7 @@ import type { Tag } from '@/schemas/tag.schema';
 
 /** ---------- 状态管理 ---------- */
 const tagStore = useTagStore();
-const { pagination, tagList, isLoading } = storeToRefs(tagStore);
+const { pagination, tagList, isLoading, selectedTag } = storeToRefs(tagStore);
 const stateStore = useStateStore();
 
 
@@ -72,6 +72,13 @@ const handleEdit = (row: Tag) => {
   ElMessage.info(`准备编辑标签: ${row.name}`);
   // 打开编辑弹窗逻辑
   stateStore.setTagEditDialogVisible(true);
+  selectedTag.value = {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    order: row.order,
+    status: row.status,
+  };
 };
 
 // 删除标签
@@ -119,7 +126,7 @@ const handleToggleStatus = async (row: Tag) => {
         customClass: 'custom-tag-confirm-box', 
         type: row.status==='inactive' ? 'warning' : 'info'
       }
-    )    // 点击了确定才会执行这里
+    )
     const res = await tagStore.toggleTagStatus(row.id);
     if (res.data) {
       row.status = res.data.status;
@@ -146,7 +153,7 @@ const handleBulkDelete = async () => {
     return;
   }
   try {
-    ElMessageBox.confirm(
+    await ElMessageBox.confirm(
       `确定要删除选中的 ${selectedRows.value.length} 个标签吗?`,
       '批量删除',
       {
@@ -157,8 +164,7 @@ const handleBulkDelete = async () => {
     )
     // 执行批量删除
     const selectedIds = selectedRows.value.map(row => row.id);
-    console.log(selectedIds);
-    const res = await tagStore.bulkDeleteTag(selectedIds);
+    const res = await tagStore.bulkDeleteTag(selectedIds, true);
     if (res.success) {
       tagList.value = tagList.value.filter(tag => !selectedIds.includes(tag.id));
       selectedRows.value = [];
@@ -208,6 +214,7 @@ const actionColumnConfig = {
 const headerActions = [
   {
     name: '批量删除',
+    label: 'delete',
     icon: 'trush',
     type: 'danger' as const,
     handler: handleBulkDelete,
@@ -234,10 +241,6 @@ watch(
     await tagStore.fetchTagList({ page, pageSize }, true)
   }
 )
-watch(selectedRows, (val) => {
-  // 监听选中行变化
-  console.log('选中行变化：', val);
-});
 </script>
 
 <template>

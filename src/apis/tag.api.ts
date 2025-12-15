@@ -2,7 +2,8 @@ import type {
   AxiosRequestConfig
 } from 'axios';
 import {
-  get, patch, post, del
+  get, patch, post, del,
+  put
 } from '@/utils/request.util';
 import {
   validateRequest, validateResponse
@@ -11,8 +12,11 @@ import {
   TagBulkDeleteParamsSchema,
   TagCreateResponseSchema, TagDeleteParamsSchema, TagDeleteResponseSchema, tagFormSchema, TagListParamsSchema,
   TagListResponseSchema, TagStatusParamsSchema, TagStatusResponseSchema,
+  TagUpdateResponseSchema,
   type Tag, type TagCreateResponse, type TagDeleteResponse, type TagFormType, type TagListParams,
-  type TagListResponse, type TagStatusResponse
+  type TagListResponse, type TagStatusResponse,
+  type TagUpdateFormType,
+  type TagUpdateResponse
 } from '@/schemas/tag.schema';
 
 
@@ -65,7 +69,19 @@ export const TagApi = {
   ): Promise<TagDeleteResponse> => {
     const safeIds = validateRequest(TagBulkDeleteParamsSchema, ids);
     const queryStr = safeIds.map(id => `ids=${id}`).join('&');
-    const res = await del<Tag>(`/tag/bulk?${queryStr}`, { ids: safeIds }, config);
+    const res = await del<Tag>(`/tag/bulk?${queryStr}`, undefined, config);
     return validateResponse(TagDeleteResponseSchema, res);
+  },
+
+  updateTag: async (
+    id: number,
+    tag: TagFormType,
+    config?: AxiosRequestConfig
+  ): Promise<TagUpdateResponse> => {
+    const safeId = validateRequest(TagDeleteParamsSchema, id);
+    const safeBody = validateRequest(tagFormSchema, tag);
+    const res = await put<Tag>(`/tag/${safeId}`, safeBody, config);
+    console.log('updatedRes: ', res)
+    return validateResponse(TagUpdateResponseSchema, res);
   },
 } 
