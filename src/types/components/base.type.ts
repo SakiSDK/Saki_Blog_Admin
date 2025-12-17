@@ -140,7 +140,9 @@ export interface ListCardProps {
   pageSize?: number;
   currentPage?: number;
   pageTotals?: number;
+  currentParams?: Record<string, any>; // 当前查询参数
   showActionColumn?: boolean; // 是否显示操作列
+  sortFields?: FormFieldConfig[],
   actionColumnConfig?: {
     label?: string;
     width?: string | number;

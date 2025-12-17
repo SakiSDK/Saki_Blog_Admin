@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox, ElSelect } from 'element-plus';
 import ListCard from '@/components/cards/ListCard.vue';
 import type { TableColumnField } from '@/types/components/base.type';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -11,7 +11,10 @@ import type { Tag } from '@/schemas/tag.schema';
 
 /** ---------- 状态管理 ---------- */
 const tagStore = useTagStore();
-const { pagination, tagList, isLoading, selectedTag } = storeToRefs(tagStore);
+const {
+  pagination, tagList, isLoading, selectedTag,
+  currentParams
+} = storeToRefs(tagStore);
 const stateStore = useStateStore();
 
 
@@ -210,6 +213,58 @@ const actionColumnConfig = {
   ]
 };
 
+// 排列方式
+const sortFields = [
+  {
+    label: '排序字段',
+    prop: 'orderBy',
+    icon: 'orderBy',
+    component: ElSelect,
+    componentProps: {
+      placeholder: '请选择排序字段',
+      clearable: true,
+      options: [
+        {
+          label: '标签ID',
+          value: 'id'
+        },
+        {
+          label: '创建时间',
+          value: 'created_at'
+        },
+        {
+          label: '更新时间',
+          value: 'updated_at'
+        },
+        {
+          label: '文章数量',
+          value: 'post_count' 
+        }
+      ]
+    },
+  },
+  {
+    label: '排序方式',
+    prop: 'sort',
+    icon: 'sort',
+    component: ElSelect,
+    componentProps: {
+      placeholder: '请选择排序方式',
+      clearable: true,
+      options: [
+        {
+          label: '升序',
+          value: 'asc'
+        },
+        {
+          label: '降序',
+          value: 'desc'
+        }
+      ]
+    }
+  }
+]
+
 // 头部操作按钮
 const headerActions = [
   {
@@ -238,7 +293,16 @@ watch(
   async ([page, pageSize], [oldPage, oldPageSize]) => {
     // 只有真正改变才触发请求
     if (page === oldPage && pageSize === oldPageSize) return
+    
     await tagStore.fetchTagList({ page, pageSize }, true)
+  }
+)
+watch(
+  () => [currentParams.value.sort, currentParams.value.orderBy],
+  async ([sort, orderBy], [oldSort, oldOrderBy]) => {
+    console.log(sort, orderBy);
+    if (sort === oldSort && orderBy === oldOrderBy) return
+    await tagStore.fetchTagList(currentParams.value, true)
   }
 )
 </script>
@@ -254,13 +318,16 @@ watch(
       :columns="tableColumns"
       :show-selection="true"
       :show-pagination="true"
+      v-model:current-page="pagination.page"
       v-model:pageSize="pagination.pageSize"
-      v-model:currentPage="pagination.page"
+      v-model:currentParams="currentParams"
+      v-model:sort="currentParams.sort"
       :page-totals="pagination.totalPages"
       :total="pagination.total"
       :show-action-column="true"
       :action-column-config="actionColumnConfig"
       :header-actions="headerActions"
+      :sort-fields="sortFields"
       @selection-change="handleSelectionChange"
     />
   </div>

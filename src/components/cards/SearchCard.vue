@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ElForm, ElFormItem, type FormInstance, type FormRules } from 'element-plus';
 import CardHeader from '../bases/CardHeader.vue';
-import { reactive, ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import type z from 'zod';
 import type { SearchCardProps } from '@/types/components/base.type';
 import { zodValidator } from '@/utils/validate.util';
@@ -17,6 +17,10 @@ const props = withDefaults(defineProps<SearchCardProps>(), {
   labelWidth: '80px',
   labelPosition: 'top',
 })
+const emits = defineEmits<{
+  (e: 'submit', formData: Record<string, string>): void;
+  (e: 'reset'): void;
+}>()
 
 /** ---------- 表单逻辑 ---------- */
 // 初始化表单数据（深拷贝避免修改原数据）
@@ -48,12 +52,11 @@ const rules = generateRules() satisfies FormRules;
 // 提交表单（调用外部传入的回调）
 const handleSubmit = async () => {
   if (!formRef.value) return;
-
   try {
     // 先执行 Element Plus 表单校验
     await formRef.value.validate();
     // 执行外部提交回调
-    await props.onSubmit(form);
+    await emits('submit', form);
   } catch (error) {
     console.error('表单校验失败：', error);
     // 可扩展：全局错误提示（如 ElMessage）
@@ -61,11 +64,18 @@ const handleSubmit = async () => {
 };
 
 // 重置表单
-const resetForm = () => {
+const resetForm = async () => {
   formRef.value?.resetFields();
   // 重置为初始数据
   Object.assign(form, { ...props.initialForm });
+  await emits('reset');
 };
+
+watch(form, (val) => {
+  console.log(val.timeRange)
+}, {
+  deep: true,
+})
 </script>
 
 <template>

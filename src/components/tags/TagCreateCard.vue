@@ -46,7 +46,7 @@ const tagFormFields:FormFieldConfig[] = [
     }
   },
   {
-    label: '优先级',
+    label: '权重',
     icon: 'sort',
     prop: 'order',
     group: 'group1',

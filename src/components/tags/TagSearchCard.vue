@@ -4,14 +4,34 @@ import SearchCard from '../cards/SearchCard.vue';
 import type { FormFieldConfig } from '@/types/components/base.type';
 import { tagSearchFormSchema } from '@/schemas/tag.schema';
 import type { TagSearchFormType } from '@/types/schemas/tag.type';
+import { useTagStore } from '@/stores/tag.store';
+import { storeToRefs } from 'pinia';
 
-const initialForm = {
+
+/** ---------- 状态管理 ---------- */
+const tagStore = useTagStore();
+const { searchQuery, pagination } = storeToRefs(tagStore);
+
+/** ---------- 页面内容 ---------- */
+const initialForm: TagSearchFormType = {
+  id: '',
   keyword: '',
   status: '',
   timeRange: [],
 }
 // 定义表单字段配置
 const tagFormFields: FormFieldConfig[] = [
+  {
+    label: '标签ID',
+    prop: 'id',
+    icon: 'ID',
+    component: ElInput,
+    componentProps: {
+      placeholder: '请输入标签ID',
+      maxLength: 20,
+      clearable: true,
+    }
+  },
   {
     label: '关键词',
     prop: 'keyword',
@@ -74,38 +94,41 @@ const tagFormFields: FormFieldConfig[] = [
       }
     ]
   },
-  {
-    label: '排列方式',
-    prop: 'sort',
-    icon: 'sort',
-    component: ElSelect,
-    componentProps: {
-      placeholder: '请选择排序方式',
-      clearable: true,
-      options: [
-        {
-          label: '升序',
-          value: 'asc'
-        },
-        {
-          label: '降序',
-          value: 'desc'
-        }
-      ]
-    }
-  }
 ]
 
 // 定义提交回调
 const handleTagSearchSubmit = async (formData: TagSearchFormType) => {
   try {
-    // 模拟接口提交
-    console.log('提交标签数据：', formData);
-    ElMessage.success('标签创建成功！');
-    // 实际项目中替换为接口请求：await tagApi.create(formData)
+    const submitData = {
+      ...formData,
+    }
+    searchQuery.value = submitData;
+    const res = await tagStore.searchTagList(submitData);
+    if (res.success) {
+      ElMessage.success('搜索成功！');
+    }
   } catch (error) {
     ElMessage.error('标签创建失败！');
     console.error('提交失败：', error);
+  }
+};
+const handleReset = async () => {
+  tagStore.resetState();
+  try {
+    const res = await tagStore.fetchTagList(
+      {
+        page: pagination.value.page,
+        pageSize: pagination.value.pageSize,
+        ...(searchQuery.value || {}),
+      },
+      true
+    );
+    if (res.success) {
+      ElMessage.success('重置成功！');
+    }
+  } catch (error) {
+    ElMessage.error('重置失败！');
+    console.error('重置失败：', error);
   }
 };
 </script>
@@ -122,7 +145,8 @@ const handleTagSearchSubmit = async (formData: TagSearchFormType) => {
       :initialForm="initialForm"
       :formSchema="tagSearchFormSchema"
       :formFields="tagFormFields"
-      :onSubmit="handleTagSearchSubmit"
+      @submit="handleTagSearchSubmit"
+      @reset="handleReset"
     />
   </div>
 </template>

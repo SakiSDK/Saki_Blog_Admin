@@ -47,6 +47,7 @@ const filteredData = ref<ListItem[]>([...props.data]);
 const isAllSelected = ref<boolean>(false);
 const isIndeterminate = ref<boolean>(false);
 const selectedRows = useVModel(props, 'selectedRows', emit) as Ref<ListItem[]>;
+const currentParams = useVModel(props, 'currentParams', emit) as Ref<Record<string, any>>;
 
 
 /** ---------- 数据监听 ---------- */
@@ -182,6 +183,22 @@ onMounted(() => {
           </div>
         </template>
       </CardHeader>
+      <div class="list-card__sort" v-if="sortFields">
+        <template v-for="field in sortFields" :key="field.prop">
+          <div class="list-card__sort-item">
+            <span class="list-card__sort-item-text">
+              <VIcon v-if="field.icon" :name="field.icon"/>
+              {{ field.label }}
+            </span>
+            <component 
+              :is="field.component"
+              v-bind="field.componentProps"
+              v-model="currentParams[field.prop]"
+            >
+            </component>
+          </div>
+        </template>
+      </div>
       <div class="list-card__body">
         <Transition name="loading-fade">
           <el-table 
@@ -366,6 +383,29 @@ onMounted(() => {
       @include mix.margin-d(r, xs);
     }
   }
+  &__sort {
+    @include mix.grid-box($c: 5, $g: lg);
+    @include mix.padding(sm lg);
+    @include mix.respond-down(md) {
+      @include mix.grid-box($c: 4, $g: lg);
+    }
+    @include mix.respond-down(sm) {
+      @include mix.grid-box($c: 3, $g: lg);
+    }
+    @include mix.respond-down(xs) {
+      @include mix.grid-box($c: 2, $g: lg);
+    }
+    @include mix.respond-down(xxs) {
+      @include mix.grid-box($c: 1, $g: lg);
+    }
+    &-item {
+      @include mix.font-style($s: sm, $c: var(--text-subtler));
+      @include mix.flex-box($d: column, $a: flex-start, $g: sm);
+      &-text {
+        text-wrap: nowrap;
+      }
+    }
+  }
   &__container {
     @include mix.container-style($p: 0, $r: md, $b: 1px solid var(--el-border-color), $o: hidden);
   }
@@ -373,6 +413,7 @@ onMounted(() => {
     position: relative;
     min-height: 720px;
     @include mix.padding(lg);
+    @include mix.padding-d(t, 0);
     @include mix.flex-box($d: column, $j: flex-end);
   }
   &__holder {

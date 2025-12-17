@@ -2,10 +2,11 @@
 import { ref } from 'vue'
 import EditCard from '../cards/EditCard.vue';
 import { ElInput, ElInputNumber, ElSelect } from 'element-plus';
-import { tagUpdateFormSchema, type TagFormType, type TagUpdateFormType } from '@/schemas/tag.schema';
+import { tagUpdateFormSchema, type TagUpdateFormType } from '@/schemas/tag.schema';
 import { useStateStore } from '@/stores/state.store';
 import { storeToRefs } from 'pinia';
 import { useTagStore } from '@/stores/tag.store';
+import type { FormFieldConfig } from '@/types/components/base.type';
 
 
 /** ---------- Tag编辑状态 ---------- */
@@ -15,7 +16,7 @@ const tagStore = useTagStore();
 const { selectedTag } = storeToRefs(tagStore);
 
 // 表单字段配置
-const formFields = ref([
+const formFields = ref<FormFieldConfig[]>([
   {
     label: '标签名称',
     icon: 'tag',

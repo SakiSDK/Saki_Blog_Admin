@@ -58,12 +58,44 @@ export const tagFormSchema = z.object({
 })
 
 export const tagSearchFormSchema = z.object({
-  keyword: zStr
-    .max(50, { message: '标签名称不能超过50个字符' })
+  id: z.union([
+    z.string('标签ID必须是文本类型')
+      .regex(/^\d+$/, { message: '标签ID必须是数字' })
+      .max(20, { message: '标签ID不能超过20个字符' })
+      .transform((val) => Number(val))
+      .refine((val) => val >= 1, { message: '标签ID必须大于0' }),
+    z.number({ message: '标签ID必须是数字' })
+      .int({ message: '标签ID必须是整数' })
+      .min(1, { message: '标签ID必须大于0' }),
+    z.literal('')
+  ]).nullable().optional(),
+  keyword: z
+    .string('关键词必须是文本类型')
+    .max(20, { message: '关键词不能超过20个字符' }) // 原50改为20，匹配表单配置
     .trim()
     .optional(),
-  status: z.enum(['active', 'inactive'], {message: '只能选择激活或者未激活'}).nullable().optional(),
-  order: z.enum(['asc', 'desc']).optional(),
+  status: z.union([
+    z.enum(['active', 'inactive'], { message: '只能选择激活或者未激活' }),
+    z.literal('') // 允许空字符串（表单初始值）
+  ]).nullable().optional(),
+  // 保留：排序字段（原逻辑不变）
+  sort: z.enum(['asc', 'desc']).optional(),
+  timeRange: z
+    .tuple([
+      z.date().optional(), // 开始时间（可选）
+      z.date().optional()  // 结束时间（可选）
+    ]).optional()
+    // 自定义校验：结束时间不能早于开始时间（可选但建议加）
+    .refine(
+      (timeRange) => {
+        // 只有两个时间都存在时，才校验顺序
+        if (timeRange?.[0] && timeRange?.[1]) {
+          return timeRange[0] <= timeRange[1];
+        }
+        return true; // 有一个为空则不校验
+      },
+      { message: '结束时间不能早于开始时间' }
+    ),
   startTime: z.date().optional(),
   endTime: z.date().optional(),
 })
@@ -95,14 +127,25 @@ export const TagListDataSchema = z.object({
   pagination: PaginationSchema
 })
 
+export const AllTagsDataSchema = z.object({
+  list: z.array(TagSchema),
+})
 /** ---------- 标签列表完整响应 Schema + 类型推导 ---------- */
 // 组合出标签列表接口的完整响应 Schema
 
 export const TagListParamsSchema = z.object({
   page: zPageNum.default(1).optional().describe('页码'),
   pageSize: zPageSize.optional().describe('每页数量'),
-  keyword: zStr.max(50, "搜索关键词不能超过 50 个字符").optional().describe('搜索关键词'),
+  keyword: zStr
+    .max(50, "搜索关键词不能超过 50 个字符")
+    .optional()
+    .describe('搜索关键词'),
   sort: zSort.optional(),
+  orderBy: z
+    .enum(['id', 'post_count', 'order', 'created_at', 'updated_at'])
+    .default('id')
+    .optional()
+    .describe('排序字段'),
 })
 export const TagStatusParamsSchema = zId.describe('标签ID');
 export const TagDeleteParamsSchema = zId.describe('标签ID');
@@ -120,6 +163,8 @@ export const TagDeleteResponseSchema = ResponseSchema(z.null());
 
 export const TagUpdateResponseSchema = ResponseSchema(TagSchema);
 
+export const AllTagsResponseSchema = ResponseSchema(AllTagsDataSchema);
+
 
 
 /** ---------- Tag表单类型 ---------- */
@@ -136,6 +181,7 @@ export type TagStatusResponse = z.infer<typeof TagStatusResponseSchema>
 export type TagCreateResponse = z.infer<typeof TagCreateResponseSchema>
 export type TagDeleteResponse = z.infer<typeof TagDeleteResponseSchema>
 export type TagUpdateResponse = z.infer<typeof TagUpdateResponseSchema>;
+export type AllTagsResponse = z.infer<typeof AllTagsResponseSchema>;
 
 /** ---------- params请求类型 ---------- */
 export type TagListParams = z.infer<typeof TagListParamsSchema>

@@ -9,27 +9,35 @@ import {
   validateRequest, validateResponse
 } from "@/utils/validate.util";
 import {
+  AllTagsDataSchema,
   TagBulkDeleteParamsSchema,
   TagCreateResponseSchema, TagDeleteParamsSchema, TagDeleteResponseSchema, tagFormSchema, TagListParamsSchema,
-  TagListResponseSchema, TagStatusParamsSchema, TagStatusResponseSchema,
+  TagListResponseSchema, tagSearchFormSchema, TagStatusParamsSchema, TagStatusResponseSchema,
   TagUpdateResponseSchema,
+  type AllTagsResponse,
   type Tag, type TagCreateResponse, type TagDeleteResponse, type TagFormType, type TagListParams,
-  type TagListResponse, type TagStatusResponse,
-  type TagUpdateFormType,
+  type TagListResponse, type TagSearchFormType, type TagStatusResponse,
   type TagUpdateResponse
 } from '@/schemas/tag.schema';
+import { cleanObject } from '@/utils/sanitize.util';
 
 
 export const TagApi = {
+  getAllTags: async (
+    config?: AxiosRequestConfig
+  ): Promise<AllTagsResponse> => {
+    const res = await get<AllTagsResponse>('/tag/all', undefined, config);
+    return validateResponse(AllTagsDataSchema, res);
+  },
+
   getTagList: async(
     params?: TagListParams,
     config?: AxiosRequestConfig
   ): Promise<TagListResponse> => {
-    // 默认参数：pageNum=1，pageSize=10
     const defaultParams: TagListParams = { page: 1, pageSize: 10, sort: 'desc' };
     const unitParams: TagListParams = {
       ...defaultParams,
-      ...params
+      ...cleanObject(params || {}),
     }
     const safeParams = validateRequest(TagListParamsSchema, unitParams);
     const res = await get<TagListResponse>('/tag', safeParams, config);
@@ -83,5 +91,15 @@ export const TagApi = {
     const res = await put<Tag>(`/tag/${safeId}`, safeBody, config);
     console.log('updatedRes: ', res)
     return validateResponse(TagUpdateResponseSchema, res);
+  },
+
+  searchTagList: async (
+    formData: TagSearchFormType,
+    config?: AxiosRequestConfig
+  ): Promise<TagListResponse> => {
+    const cleanedQuery = cleanObject(formData)
+    const safeQuery = validateRequest(tagSearchFormSchema, cleanedQuery);
+    const res = await get<TagListResponse>('/tag/search', safeQuery, config);
+    return validateResponse(TagListResponseSchema, res);
   },
 } 
