@@ -9,7 +9,7 @@ import {
   validateRequest, validateResponse
 } from "@/utils/validate.util";
 import {
-  AllTagsDataSchema,
+  AllTagsResponseSchema,
   TagBulkDeleteParamsSchema,
   TagCreateResponseSchema, TagDeleteParamsSchema, TagDeleteResponseSchema, tagFormSchema, TagListParamsSchema,
   TagListResponseSchema, tagSearchFormSchema, TagStatusParamsSchema, TagStatusResponseSchema,
@@ -27,7 +27,7 @@ export const TagApi = {
     config?: AxiosRequestConfig
   ): Promise<AllTagsResponse> => {
     const res = await get<AllTagsResponse>('/tag/all', undefined, config);
-    return validateResponse(AllTagsDataSchema, res);
+    return validateResponse<AllTagsResponse>(AllTagsResponseSchema, res);
   },
 
   getTagList: async(

@@ -161,10 +161,7 @@ export const useTagStore = defineStore('tag', () => {
 
     try {
       const response = await TagApi.getAllTags();
-      if (response.success) {
-        tagList.value = response.data.list;
-        pagination.value = response.data.pagination;
-      } else {
+      if (!response.success) {
         // 业务错误解析
         const errorRes = ErrorResponseSchema.parse(response) as ErrorResponse;
         errorMsg.value = `[${errorRes.code}] ${errorRes.message}`;
@@ -172,7 +169,7 @@ export const useTagStore = defineStore('tag', () => {
       }
       return response;
     } catch (error) {
-      handleRequestError(error, '获取所有标签失败')
+      return handleRequestError(error, '获取所有标签失败')
     }finally {
       setLoading(false);
     }
@@ -477,6 +474,7 @@ export const useTagStore = defineStore('tag', () => {
     getTagtotalPages,
     getTagByName,
     /** ---------- 方法 ---------- */
+    getAllTags,
     resetState,
     fetchTagList,
     searchTagList,

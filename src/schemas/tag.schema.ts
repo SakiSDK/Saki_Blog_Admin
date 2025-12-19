@@ -4,6 +4,12 @@ import { PaginationSchema, ResponseSchema } from './base.schema';
 
 
 /** ---------- 返回值Tag类型 ---------- */
+export const TagNameSchema = z.string()
+  .min(1, "标签名称不能为空")
+  .trim()
+  .max(50, "标签名称不能超过50个字符")
+  .regex(/^[a-zA-Z0-9_\u4e00-\u9fa5\-\s]+$/, "标签名称只能包含中英文、数字、下划线、横线和空格")
+  .describe("标签名称");
 const TagSchema = z.object({
   id: zId.describe("标签ID"),
   name: zStr
@@ -33,6 +39,14 @@ const TagSchema = z.object({
   status: z.enum(['active', 'inactive'] as const),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+})
+// 基础Tag
+const TagBaseSchema = z.object({
+  id: zId.describe("标签ID"),
+  name: zStr
+    .max(50, '标签名最多50个字符')
+    .regex(/^[a-zA-Z0-9_\u4e00-\u9fa5\-\s]+$/, "标签名只能包含中英文、数字、下划线、横线和空格")
+    .describe("标签名称"),
 })
 
 /** ---------- 定义标签创建的Zod校验Schema ---------- */
@@ -128,7 +142,7 @@ export const TagListDataSchema = z.object({
 })
 
 export const AllTagsDataSchema = z.object({
-  list: z.array(TagSchema),
+  list: z.array(TagBaseSchema),
 })
 /** ---------- 标签列表完整响应 Schema + 类型推导 ---------- */
 // 组合出标签列表接口的完整响应 Schema
@@ -174,6 +188,7 @@ export type TagUpdateFormType = z.infer<typeof tagUpdateFormSchema>;
 
 /** ---------- Tag返回值类型 ---------- */
 export type Tag = z.infer<typeof TagSchema>;
+export type TagBase = z.infer<typeof TagBaseSchema>;
 
 /** ---------- Response返回类型 ---------- */
 export type TagListResponse = z.infer<typeof TagListResponseSchema>

@@ -22,7 +22,7 @@ export const validateResponse = <T>(schema: z.ZodSchema<T>, data: unknown): T =>
 };
 
 export const zodValidator = (schema: z.ZodSchema<any>): FormItemRule['validator'] => {
-  return (rule, value, callback) => {
+  return (_, value, callback) => {
     const result = schema.safeParse(value);
     if (!result.success) {
       const error = result.error.issues[0]?.message || '校验失败';
