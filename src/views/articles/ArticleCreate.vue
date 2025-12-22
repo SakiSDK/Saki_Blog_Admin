@@ -3,7 +3,7 @@ import CardHeader from '@/components/bases/CardHeader.vue';
 import { TagNameSchema, type TagBase } from '@/schemas/tag.schema';
 import { useTagStore } from '@/stores/tag.store';
 import type { FormFieldConfig } from '@/types/components/base.type';
-import { ElForm, ElInput, ElInputNumber, ElMessage, ElSelect, ElUpload } from 'element-plus';
+import { ElForm, ElInput, ElInputNumber, ElMessage, ElRadio, ElSelect, ElUpload } from 'element-plus';
 import { nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { filter, map } from 'lodash'
 import MarkdownEditor from '@/components/bases/MarkdownEditor.vue';
@@ -20,6 +20,7 @@ interface ArticleForm {
     name: string;
     id?: number;
   }[]
+  allowComment: boolean;
 }
 
 /** ---------- Markdown编辑器 ---------- */
@@ -50,7 +51,8 @@ const form = reactive<ArticleForm>({
   author: 'SakiSDK',
   order: 0,
   cover: undefined,
-  tags: []
+  tags: [],
+  allowComment: true
 })
 const formRef = ref<typeof ElForm>();
   
@@ -138,6 +140,25 @@ const articleCoverField: FormFieldConfig = {
     }
   }
 }
+const commentField: FormFieldConfig = {
+  label: '评论',
+  labelWidth: '80px',
+  prop: 'allowComment',
+  icon: 'comment',
+  component: ElRadio,
+  componentProps: {
+    options: [
+      {
+        label: '允许评论',
+        value: true
+      },
+      {
+        label: '不允许评论',
+        value: false
+      }
+    ]
+  }
+}
 
 /** ---------- 逻辑方法 ---------- */
 const handleTagSelect = (selectedTag: TagBase) => {
@@ -201,6 +222,17 @@ const handleInputConfirm = () => {
   inputVisible.value = false
   inputValue.value = ''
 }
+// 提交表单（调用外部传入的回调）
+const handleSubmit = async () => {
+  if (!formRef.value) return;
+
+};
+// 重置表单
+const resetForm = () => {
+  formRef.value?.resetFields();
+  // 重置为初始数据
+
+};
 
 
 /** ---------- 数据监听 ---------- */
@@ -372,7 +404,61 @@ onMounted(async () => {
               <div class="article-create__edit-board">
                 <MarkdownEditor v-model:content="content" />
               </div>
+            </div>            
+            <h3 class="article-create-subtitle" :style="{
+              marginTop: '35px',
+            }">
+              发布设置
+            </h3>
+            <div class="article-create__item">
+              <el-form-item :label="commentField.label" :prop="commentField.prop">
+                <template #label>
+                  <div class="article-create__label">
+                    <el-icon class="article-create__label-icon">
+                      <VIcon :name="commentField.icon"/>
+                    </el-icon>
+                    <span class="article-create__label-text">{{ commentField.label }}</span>
+                  </div>
+                </template>
+                <el-radio-group
+                  v-if="commentField.component === ElRadio && commentField.componentProps?.options"
+                  v-model="form[commentField.prop as keyof ArticleForm]"
+                >
+                  <el-radio
+                    v-for="opt in commentField.componentProps.options"
+                    :key="String(opt.value)"
+                    :label="opt.value"
+                  >
+                    {{ opt.label }}
+                  </el-radio>
+                </el-radio-group>
+                <component
+                  v-else
+                  :is="commentField.component"
+                  v-model="form[commentField.prop as keyof ArticleForm]"
+                  v-bind="commentField.componentProps"
+                />
+              </el-form-item>
             </div>
+          <!-- 操作按钮 -->
+          <el-form-item class="article-create__actions" label-width="0">
+            <el-button 
+              class="article-create__btn article-create__btn-reset" 
+              @click="resetForm"
+            >
+              <VIcon name="draft"/>
+              <span class="article-create__btn-text">保存草稿</span>
+            </el-button>
+            <el-button 
+              class="article-create__btn article-create__btn-submit" 
+              type="primary" 
+              @click="handleSubmit"
+            >
+              <VIcon name="submit"/>
+              <span class="article-create__btn-text">直接发布</span>
+            </el-button>
+
+          </el-form-item>
           </div>
         </el-form>
       </div>
@@ -455,6 +541,32 @@ onMounted(async () => {
     }
     &-detail {
       @include mix.font-style($s: xs, $c: var(--text-subtler));
+    }
+  }
+  &__btn{
+    @extend %flex-center;
+    @include anim.transition($p: transform bg border-color);
+    @include hov.move-y;
+    &-submit {
+      background-color: var(--primary-base);
+      border-color: var(--primary-base);
+      @include hov.bg(var(--primary-strong));
+      @include hov.border(var(--primary-strong));
+    }
+    &-reset {
+      border-color: var(--border-base-color);
+      @include hov.border(var(--primary-base));
+      @include hov.color(var(--primary-base));
+      @include hov.bg(var(--primary-transparent));
+    }
+    &-text {
+      @include mix.font-style($s: sm);
+      @include mix.margin-d(l, xs);
+    }
+  }
+  &__actions {
+    :deep(.el-form-item__content) {
+      justify-content: flex-end;
     }
   }
 }

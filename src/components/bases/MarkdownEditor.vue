@@ -36,18 +36,6 @@ const showExport = ref<boolean>(false);
 const themeStore = useThemeStore();
 const { theme } = storeToRefs(themeStore);
 
-// 监听主题变化
-watch(() => themeStore.theme, (val) => {
-  if (vditor.value) {
-    const currentValue = vditor.value.getValue();
-    vditor.value.destroy();
-    nextTick(() => {
-      initEditor();
-      vditor.value?.setValue(currentValue);
-    });
-  }
-})
-
 
 // 初始化编辑器
 const initEditor = () => {
@@ -60,60 +48,43 @@ const initEditor = () => {
       enable: true
     },
     toolbar: [
-      'emoji', 'bold', 'italic', 'strikeThrough', '|',
-      'link', 'image', 'code', '|',
-      'heading', 'quote', 'list', 'check', '|',
+      'emoji', 'bold', 'italic', 'strike', '|',
+      'link', 'table', 'code', '|',
+      'headings', 'quote', 'list', 'check', '|',
       'fullscreen', 'preview', 'export'
     ],
-    height: 600,
+    height: 900,
     placeholder: '输入 Markdown 内容...',
     upload: {
 
     },
     after: () => {
-      
+      // 初始化后同步内容（避免闪白）
+      if (props.content) { 
+        vditor.value?.setValue(props.content);
+      }
     }
   })
 }
-const togglePreview = () => {
-  mode.value = mode.value === 'wysiwyg' ? 'ir' : 'sv';
-  vditor.value?.setValue(editorContent.value);
-}
 
-const saveContent = () => {
-  const content = vditor.value?.getValue() || '';
-  editorContent.value = content;
-  emit('save');
-}
 
-const exportToHTML = () => {
-  const html = vditor.value?.getHTML() || '';
-  const blob = new Blob([html], { type: 'text/html' })
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `article_${Date.now()}.html`
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-const exportToPDF = () => {
-  const html = vditor.value?.getHTML() || '';
-  const blob = new Blob([html], { type: 'application/pdf' })
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `article_${Date.now()}.pdf`
-  document.body.appendChild(a);
-  a.click();
-}
-
+/** ---------- 数据监听 ---------- */
 // 监听 editorContent 变化
 watch(editorContent, (val) => {
   if(vditor.value && vditor.value.getValue() !== val){
     vditor.value.setValue(val);
+  }
+})
+
+// 监听主题变化
+watch(() => themeStore.theme, () => {
+  if (vditor.value) {
+    const currentValue = vditor.value.getValue();
+    vditor.value.destroy();
+    nextTick(() => {
+      initEditor();
+      vditor.value?.setValue(currentValue);
+    }); 
   }
 })
 
@@ -134,73 +105,20 @@ onBeforeUnmount(() => {
 <template>
   <div class="vditor-container">
     <div ref="editorRef" class="vditor-editor"></div>
-    
-    <div class="vditor-toolbar" v-if="showToolbar">
-      <button @click="togglePreview" class="toolbar-btn" :class="{ active: mode === 'sv' }">
-        <i class="fas fa-eye"></i>
-        <span v-if="mode === 'sv'">预览</span>
-        <span v-else>编辑</span>
-      </button>
-      
-      <button @click="saveContent" class="toolbar-btn primary">
-        <i class="fas fa-save"></i> 保存
-      </button>
-      
-      <button @click="showExport = true" class="toolbar-btn">
-        <i class="fas fa-download"></i> 导出
-      </button>
-      
-      <div v-if="showExport" class="export-options">
-        <div class="export-option" @click="exportToHTML">
-          <i class="fas fa-file-alt"></i> HTML
-        </div>
-        <div class="export-option" @click="exportToPDF">
-          <i class="fas fa-file-pdf"></i> PDF
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.vditor {
-  &-container {
-
-  }
-  &-editor {
-
-  }
-  &-toolbar { 
-  
-  }
-  &-btn {
-    &:hover {
-
-    }
-    &.active {
-
-    }
-    &.primary {
-
-    }
-  }
+:deep(.vditor) {
+  border: var(--border-base);
+  @include mix.radius(md);
+  overflow: hidden;
 }
-.export-options {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: var(--space-sm);
-  z-index: 10;
+:deep(.vditor-toolbar) {
+  background-color: var(--bg-base);
+  border-bottom: var(--border-base);
 }
-.export-option {
-  padding: var(--space-sm);
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.export-option:hover {
-  background-color: var(--gray);
+:deep(.vditor-reset) {
+  @include mix.font-style($c: var(--text-subtle));
 }
 </style>

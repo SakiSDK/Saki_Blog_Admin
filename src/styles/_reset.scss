@@ -280,3 +280,9 @@ $placement: top,bottom,right,left;
     }
   }
 }
+
+
+/** ---------- Vditor样式重置 ---------- */
+:deep(.vditor-toolbar) {
+  background-color: var(--bg-base);
+}

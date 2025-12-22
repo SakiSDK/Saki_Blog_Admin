@@ -12,4 +12,5 @@ declare global {
   const ElMessage: typeof import('element-plus/es').ElMessage
   const ElMessageBox: typeof import('element-plus/es').ElMessageBox
   const ElSelect: typeof import('element-plus/es').ElSelect
+  const ElSwitch: typeof import('element-plus/es').ElSwitch
 }

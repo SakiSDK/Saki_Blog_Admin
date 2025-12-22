@@ -2,8 +2,7 @@ import type {
   AxiosRequestConfig
 } from 'axios';
 import {
-  get, patch, post, del,
-  put
+  get, patch, post, del, put
 } from '@/utils/request.util';
 import {
   validateRequest, validateResponse
@@ -58,7 +57,7 @@ export const TagApi = {
     config?: AxiosRequestConfig
   ): Promise<TagCreateResponse> => {
     const safeBody = validateRequest(tagFormSchema, tag);
-    const res = await post<Tag>('/tag/', safeBody, config);
+    const res = await post<Tag>('/tag', safeBody, config);
     return validateResponse(TagCreateResponseSchema, res);
   },
 

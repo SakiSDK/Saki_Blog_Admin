@@ -38,6 +38,12 @@ export const useStateStore = defineStore('state', () => {
     isTagEditDialogVisible.value = value;
   }
 
+  /** ---------- 分类编辑弹窗状态 ---------- */
+  const isCategoryEditDialogVisible = ref<boolean>(false);
+  const setCategoryEditDialogVisible = (value: boolean) => {
+    isCategoryEditDialogVisible.value = value;
+  }
+
 
   return {
     isCollapsedAsideBar,
@@ -48,6 +54,8 @@ export const useStateStore = defineStore('state', () => {
     setRouteLoading,
     isTagEditDialogVisible,
     setTagEditDialogVisible,
+    isCategoryEditDialogVisible,
+    setCategoryEditDialogVisible,
   }
 })
 
