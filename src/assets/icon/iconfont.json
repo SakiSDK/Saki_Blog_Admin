@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "5700816",
+      "name": "password",
+      "font_class": "password",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    },
+    {
       "icon_id": "20244243",
       "name": "submit",
       "font_class": "submit",

@@ -5,16 +5,23 @@ import AsideBar from './components/global/AsideBar.vue';
 import FooterBar from './components/global/FooterBar.vue';
 import TopBar from './components/global/TopBar.vue';
 import { useStateStore } from './stores/state.store';
+import { useAuthStore } from './stores/auth.store';
 import { animate, stagger, splitText } from 'animejs';
 import { nextTick, onMounted, ref, watch } from 'vue';
 import { waitForAllRequests } from './utils/apiTracker.util';
 import { useEventListener, useScrollLock } from '@vueuse/core';
+import { useRoute } from 'vue-router';
 
 
 
 const domReady = ref(false); // 标记 DOM 是否加载完成
 const stateStore = useStateStore();
+const authStore = useAuthStore();
+const route = useRoute();
 const { isCollapsedAsideBar } = storeToRefs(stateStore);
+
+// 初始化认证状态
+authStore.initAuth();
 
 // 原有隐藏加载页逻辑（保留）
 const handleHideLoader = () => {
@@ -81,7 +88,26 @@ onMounted(async() => {
 
 <template>
   <div class="app">
-    <el-container class="app__container">
+    <!-- 全局加载遮罩 -->
+    <Transition name="loading-fade">
+      <div 
+        class="app__mask"
+        v-loading="stateStore.isGlobalLoading||stateStore.isRouteLoading"
+        element-loading-text="LOADING..."
+        :element-loading-spinner="svg"
+        element-loading-svg-view-box="-10, -10, 50, 50"
+        fullscreen
+        v-if="stateStore.isGlobalLoading||stateStore.isRouteLoading"
+      >
+      </div>
+    </Transition>
+    <!-- 独立页面（如登录页） -->
+    <template v-if="route.name === 'Login'">
+      <router-view />
+    </template>
+
+    <!-- 主布局页面 -->
+    <el-container v-else class="app__container">
       <el-header class="app__header">
         <TopBar/>
       </el-header>
@@ -94,7 +120,7 @@ onMounted(async() => {
         </el-aside>
         <el-container>
           <el-main class="app__main">
-            <Transition name="loading-fade">
+            <!-- <Transition name="loading-fade">
               <div 
                 class="app__mask"
                 v-loading="stateStore.isGlobalLoading||stateStore.isRouteLoading"
@@ -105,7 +131,7 @@ onMounted(async() => {
                 v-if="stateStore.isGlobalLoading||stateStore.isRouteLoading"
               >
               </div>
-            </Transition>
+            </Transition> -->
             <Transition name="fade">
               <router-view/>
             </Transition>

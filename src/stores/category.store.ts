@@ -210,7 +210,7 @@ export const useCategoryStore = defineStore('category', () => {
 
       // 发起请求
       const response = await CategoryApi.getCategoryList(currentParams.value, config);
-
+      console.log(response);
       // 更新状态
       if (response.success) {
         categoryList.value = isRefresh 
@@ -267,7 +267,7 @@ export const useCategoryStore = defineStore('category', () => {
 
       // 发起搜索请求
       const response = await CategoryApi.searchCategoryList(requestParams, config);
-      
+      console.log(response);
       if (response.success) {
         categoryList.value = response.data.list; // 搜索直接替换列表（不加载更多）
         pagination.value = response.data.pagination;

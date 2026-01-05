@@ -44,7 +44,7 @@ export default defineConfig({
     }
   },
   server: {
-    port: 5173, // 不写也行，默认5173
+    port: 5174, // 不写也行，默认5173
     open: true, // 自动打开浏览器（可选）
     proxy: {
       // 这里是代理配置！！！

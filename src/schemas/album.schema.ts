@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { zStr } from './common.schema';
+import { zId, zStr } from './common.schema';
 
 /** ---------- 定义Album相关的Schema ---------- */
-export const albumSearchFormSchema = z.object({
+export const AlbumSearchFormSchema = z.object({
   name: zStr
     .max(50, { message: '相册名称不能超过50个字符' })
     .trim()
@@ -20,5 +20,26 @@ export const albumSearchFormSchema = z.object({
   sort: z.enum(['asc', 'desc']).optional(),
 });
 
+export const AlbumSchema = z.object({
+  id: zId.describe('相册ID'),
+  name: zStr
+    .max(50, { message: '相册名称不能超过50个字符' })
+    .trim()
+    .nonempty({ message: '相册名称不能为空' }),
+  description: zStr
+    .max(200, { message: '相册描述不能超过200个字符' })
+    .trim()
+    .optional(),
+  creator: zStr.trim().optional(),
+  coverId: zStr.trim().optional(),
+  coverUrl: zStr.trim().optional(),
+  thumbnailUrl: zStr.trim().optional(),
+  photoCount: z.number('照片数量必须是数字').min(0,'照片数量不能小于0').default(0),
+  status: z.enum(['active', 'inactive']).default('active'),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+})
 
-export type AlbumSearchFormType = z.infer<typeof albumSearchFormSchema>;
+
+export type AlbumSearchFormType = z.infer<typeof AlbumSearchFormSchema>;
+export type Album = z.infer<typeof AlbumSchema>;

@@ -301,7 +301,6 @@ watch(
 watch(
   () => [currentParams.value.sort, currentParams.value.orderBy],
   async ([sort, orderBy], [oldSort, oldOrderBy]) => {
-    console.log(sort, orderBy);
     if (sort === oldSort && orderBy === oldOrderBy) return
     await categoryStore.fetchCategoryList(currentParams.value, true)
   }

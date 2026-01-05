@@ -5,7 +5,6 @@ import ArticleCreate from '@/views/articles/ArticleCreate.vue';
 import ArticleList from '@/views/articles/ArticleList.vue';
 import ArticleEdit from '@/views/articles/ArticleEdit.vue';
 import ArticleDraft from '@/views/articles/ArticleDraft.vue';
-import Album from '@/views/albums/AlbumCreate.vue';
 import Category from '@/views/categories/Category.vue';
 import Tag from '@/views/tags/Tag.vue';
 import BasicSettings from '@/views/settings/BasicSettings.vue';
@@ -24,9 +23,7 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     redirect: '/dashboard',
     meta: {
-      // requiresAuth: true, // 需要登录后才能访问
-      //? 开发环境测试用
-      requiresAuth: false, // 需要登录后才能访问
+      requiresAuth: true, // 需要登录后才能访问
     }
   },
   // 登录页
@@ -44,9 +41,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Dashboard',
     component: Dashboard,
     meta: {
-      // requiresAuth: true, // 需要登录
-      //? 测试环境
-      requiresAuth: false,
+      requiresAuth: true, // 需要登录
       title: '控制台', // 面包屑和页面标题使用
       roles: ['admin', 'editor'], // 允许访问的角色（admin/编辑）
     },
@@ -59,7 +54,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       // requiresAuth: true,
       //? 测试环境
-      requiresAuth: false,
+      requiresAuth: true,
       title: '文章管理',
       roles: ['admin', 'editor'],
     },
@@ -108,9 +103,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Album',
     redirect: '/album/list',
     meta: {
-      // requiresAuth: true,
-      //? 测试环境
-      requiresAuth: false,
+      requiresAuth: true,
     },
     children: [
       {
@@ -133,9 +126,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Setting',
     redirect: '/setting/basic',
     meta: {
-      // requiresAuth: true,
-      //? 测试环境
-      requiresAuth: false,
+      requiresAuth: true,
       title: '系统设置',
       roles: ['admin'], // 仅管理员可访问
     },

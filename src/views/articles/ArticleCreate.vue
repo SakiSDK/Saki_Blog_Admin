@@ -3,10 +3,15 @@ import CardHeader from '@/components/bases/CardHeader.vue';
 import { TagNameSchema, type TagBase } from '@/schemas/tag.schema';
 import { useTagStore } from '@/stores/tag.store';
 import type { FormFieldConfig } from '@/types/components/base.type';
-import { ElForm, ElInput, ElInputNumber, ElMessage, ElRadio, ElSelect, ElUpload } from 'element-plus';
+import { ElForm, ElInput, ElInputNumber, ElMessage, ElRadio, ElSelect, ElUpload, ElMessageBox } from 'element-plus';
 import { nextTick, onMounted, reactive, ref, watch } from 'vue';
-import { filter, map } from 'lodash'
+import { filter, debounce } from 'lodash'
 import MarkdownEditor from '@/components/bases/MarkdownEditor.vue';
+import { useCategoryStore } from '@/stores/category.store';
+import { EditSessionStorage } from '@/utils/sessionStorage.util';
+import { useRoute } from 'vue-router';
+import { useAuthStore } from '@/stores/auth.store';
+import { toRaw } from 'vue';
 
 
 
@@ -23,17 +28,181 @@ interface ArticleForm {
   allowComment: boolean;
 }
 
-/** ---------- Markdown编辑器 ---------- */
-
 
 /** ---------- 状态管理 ---------- */
 const tagStore = useTagStore();
+const categoryStore = useCategoryStore();
 const inputVisible = ref<boolean>(false);
+const sessionId = ref<string | null>(null);
+const isSessionLoading = ref<boolean>(true);
+const articleId = ref<string | null>(null); // 从路由或者props中获取
+const authStore = useAuthStore();
+const { user } = authStore;
+
+
+/** ---------- 初始化操作 ---------- */
+// 从路由获取文章ID
+const route = useRoute();
+articleId.value = route.params.id as string;
+
+// 最后保存时间
+const lastSavedTime = ref<string>('');
+
+// 获取当前会话ID
+const initializeSession = async () => { 
+  // 获取当前用户的shortID
+  const userId = user?.shortId;
+  if (!userId) return;
+
+  // 获取暂定的会话ID (可能是旧的，也可能是新创建的)
+  const sid = EditSessionStorage.getOrCreateSessionId(articleId.value, userId);
+  
+  // 检查是否有对应的草稿内容
+  const draftKey = `draft_${sid}`;
+  const hasDraft = !!localStorage.getItem(draftKey);
+
+  if (hasDraft) {
+    try {
+      await ElMessageBox.confirm(
+        '检测到您有未完成的草稿，是否恢复编辑？',
+        '发现草稿',
+        {
+          confirmButtonText: '恢复编辑',
+          cancelButtonText: '创建新文章',
+          type: 'info',
+          distinguishCancelAndClose: true,
+          closeOnClickModal: false,
+          closeOnPressEscape: false,
+          showClose: false 
+        }
+      );
+      
+      // 用户选择恢复
+      sessionId.value = sid;
+      loadDraft();
+      
+    } catch (action) {
+      // 用户选择取消（创建新文章）
+      if (action === 'cancel') {
+        // 1. 删除旧草稿和会话
+        localStorage.removeItem(draftKey);
+        EditSessionStorage.clearSession(articleId.value, userId);
+        
+        // 2. 创建新会话
+        sessionId.value = EditSessionStorage.getOrCreateSessionId(articleId.value, userId);
+        
+        // 3. 重置表单状态
+        content.value = '';
+        lastSavedTime.value = '';
+        formRef.value?.resetFields();
+        // 确保复杂对象也被重置
+        form.tags = [];
+        form.cover = undefined;
+        form.title = '';
+        form.author = user?.nickname || 'SakiSDK'; // 恢复默认作者
+        
+        ElMessage.success('已创建新文章草稿');
+      }
+    }
+  } else {
+    // 没有草稿，直接使用该会话
+    sessionId.value = sid;
+  }
+
+  isSessionLoading.value = false;
+}
+
+// 加载草稿
+const loadDraft = () => { 
+  if (!sessionId.value) return;
+  const draftKey = `draft_${sessionId.value}`;
+  const storedDraft = localStorage.getItem(draftKey);
+  
+  if (storedDraft) {
+    try {
+      const draftData = JSON.parse(storedDraft);
+      
+      // 恢复表单数据
+      if (draftData.form) {
+        Object.assign(form, draftData.form);
+      }
+      
+      // 恢复内容
+      if (draftData.content) {
+        content.value = draftData.content;
+      }
+
+      // 恢复最后保存时间
+      if (draftData.updatedAt) {
+        lastSavedTime.value = new Date(draftData.updatedAt).toLocaleString();
+      }
+    } catch (e) {
+      console.error('Failed to parse draft data', e);
+    }
+  }
+}
+
+// 保存草稿
+const saveDraft = debounce(() => {
+  if (!sessionId.value) return;
+  const userId = user?.shortId;
+  if (!userId) return;
+  
+  const draftKey = `draft_${sessionId.value}`;
+  const now = new Date();
+  
+  const draftData = {
+    form: toRaw(form),
+    content: content.value,
+    updatedAt: now.toISOString()
+  };
+
+  localStorage.setItem(draftKey, JSON.stringify(draftData));
+  
+  // 更新会话（记录最后编辑时间）
+  EditSessionStorage.updateSession(articleId.value, userId, sessionId.value);
+  
+  lastSavedTime.value = now.toLocaleString();
+}, 1000); // 1秒防抖
+
+// 手动保存（不防抖，立即保存）
+const handleManualSave = () => {
+  saveDraft.flush(); // 立即执行等待中的 debounced 函数
+  ElMessage.success('草稿保存成功');
+}
+
+// 清除会话
+const clearSession = () => {
+  if (!sessionId.value) return;
+  const userId = user?.shortId;
+  if (!userId) return;
+  
+  // 清除存储的内容
+  localStorage.removeItem(`draft_${sessionId.value}`);
+  
+  // 清除会话
+  EditSessionStorage.clearSession(articleId.value, userId);
+  
+  // 重置状态
+  content.value = '';
+  sessionId.value = null;
+  lastSavedTime.value = '';
+};
+
+// 组件挂载时初始化
+onMounted(() => {
+  initializeSession();
+  
+  // 清理过期会话
+  EditSessionStorage.cleanupExpiredSessions();
+});
+
 
 /** ---------- 元素绑定 ---------- */
 const inputRef = ref<typeof ElInput>();
 const inputWidth = ref<number>(60) // 默认 60px
 const measureRef = ref<HTMLElement | null>(null);
+
 
 /** ---------- 数据管理 ---------- */
 const inputValue = ref('')
@@ -55,12 +224,11 @@ const form = reactive<ArticleForm>({
   allowComment: true
 })
 const formRef = ref<typeof ElForm>();
-  
 const formConfig = {
   labelWidth: '80px',
   labelPosition: 'top' as const,
 }
-const baseFields: FormFieldConfig[] = [
+const baseFields = ref<FormFieldConfig[]>([
   {
     label: '标题',
     labelWidth: '80px',
@@ -88,7 +256,8 @@ const baseFields: FormFieldConfig[] = [
     icon: 'category',
     component: ElSelect,
     componentProps: {
-      placeholder: '请选择分类'
+      placeholder: '请选择分类',
+      options: []
     }
   },
   {
@@ -103,7 +272,7 @@ const baseFields: FormFieldConfig[] = [
       step: 1,
     }
   }
-]
+])
 const articleTagField = {
   label: '标签',
   labelWidth: '80px',
@@ -161,6 +330,7 @@ const commentField: FormFieldConfig = {
 }
 
 /** ---------- 逻辑方法 ---------- */
+// 标签选择
 const handleTagSelect = (selectedTag: TagBase) => {
   const target = tagList.value.find((tag) => tag.id === selectedTag.id);
   if (!target) return;
@@ -171,6 +341,7 @@ const handleTagSelect = (selectedTag: TagBase) => {
     form.tags = filter(form.tags, tag => tag.id !== selectedTag.id)
   }
 }
+// 标签删除
 const handleTagClose = (closedTag: {
   id?: number;
   name: string;
@@ -189,12 +360,14 @@ const handleTagClose = (closedTag: {
     form.tags = form.tags.filter(tag => tag.name !== closedTag.name)
   }
 }
+// 添加标签，校验标签名是否存在，假如不存在会自动添加
 const showInput = async () => {
   inputVisible.value = true
   await nextTick()
   if (!inputRef.value) return;
   inputRef.value.focus()
 }
+// 确认添加标签
 const handleInputConfirm = () => {
   const validateResult = TagNameSchema.safeParse(inputValue.value);
   if (!validateResult.success) {
@@ -228,11 +401,44 @@ const handleSubmit = async () => {
 
 };
 // 重置表单
-const resetForm = () => {
-  formRef.value?.resetFields();
-  // 重置为初始数据
+// const resetForm = () => {
+//   formRef.value?.resetFields();
+//   // 重置为初始数据
 
-};
+// };
+// 获取分类并填充 options
+const loadCategories = async () => {
+  try {
+    const categoryRes = await categoryStore.getAllCategories();
+    if (categoryRes.success) {
+      const categoryField = baseFields.value.find(field => field.prop === 'category');
+      if (categoryField) {
+        categoryField.componentProps!.options = categoryRes.data.list.map(category => ({
+          label: category.name,
+          value: category.id
+        }));
+      }
+    }
+  } catch (error) {
+    console.error('获取分类列表失败：', error);
+    ElMessage.error('获取分类列表失败！');
+  }
+}
+// 获取标签并填充 options
+const loadTags = async () => {
+  try {
+    const tagRes = await tagStore.getAllTags();
+    if (tagRes.success) {
+      tagList.value = tagRes.data.list.map(tag => ({
+        ...tag,
+        isSelected: false
+      }));
+    }
+  } catch (error) {
+    console.error('获取标签列表失败：', error);
+    ElMessage.error('获取标签列表失败！');
+  }
+}
 
 
 /** ---------- 数据监听 ---------- */
@@ -246,22 +452,13 @@ watch(form, (val) => {
   console.log(val)
 })
 
+
 /** ---------- 生命周期钩子 ---------- */
 onMounted(async () => {
-  try {
-    const res = await tagStore.getAllTags();
-    if (res.success) {
-      map(res.data.list, (tag) => {
-        tagList.value.push({
-          ...tag,
-          isSelected: false
-        })
-      })
-    }
-  } catch (error) {
-    console.error('获取标签列表失败：', error);
-    ElMessage.error('获取标签列表失败！');
-  }
+  // 加载分类列表
+  await loadCategories();
+  // 加载标签列表
+  await loadTags();
 })
 </script>
 
@@ -442,9 +639,12 @@ onMounted(async () => {
             </div>
           <!-- 操作按钮 -->
           <el-form-item class="article-create__actions" label-width="0">
+            <span v-if="lastSavedTime" class="article-create__save-time">
+              上次保存: {{ lastSavedTime }}
+            </span>
             <el-button 
               class="article-create__btn article-create__btn-reset" 
-              @click="resetForm"
+              @click="handleManualSave"
             >
               <VIcon name="draft"/>
               <span class="article-create__btn-text">保存草稿</span>
@@ -474,7 +674,8 @@ onMounted(async () => {
   width: 100%;
 }
 :deep(.el-upload) {
-  width: 60%;
+  width: 100%;
+  height: 300px;
 }
 .label {
   gap: 0 !important;
@@ -564,9 +765,14 @@ onMounted(async () => {
       @include mix.margin-d(l, xs);
     }
   }
+  &__save-time {
+    @include mix.font-style($s: xs, $c: var(--text-subtle));
+    @include mix.margin-d(r, sm);
+  }
   &__actions {
     :deep(.el-form-item__content) {
       justify-content: flex-end;
+      align-items: center;
     }
   }
 }

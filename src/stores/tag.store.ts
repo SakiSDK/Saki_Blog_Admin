@@ -1,23 +1,13 @@
-import {
-  defineStore
-} from 'pinia';
-import {
-  ref, computed
-} from 'vue';
-import {
-  TagApi
-} from '@/apis/tag.api';
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import { TagApi } from '@/apis/tag.api';
 import {
   ErrorResponseSchema,
   type ErrorResponse,
   type Pagination
 } from '@/schemas/base.schema';
-import type {
-  AxiosRequestConfig
-} from 'axios';
-import {
-  useTimeoutFn
-} from '@vueuse/core';
+import type { AxiosRequestConfig } from 'axios';
+import { useTimeoutFn } from '@vueuse/core';
 import type {
   AllTagsResponse,
   Tag, TagCreateResponse, TagDeleteResponse, TagFormType,

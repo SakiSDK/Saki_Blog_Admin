@@ -1,11 +1,17 @@
 <script lang="ts" setup>
 import { useThemeStore } from '@/stores/theme.store';
 import VIcon from './VIcon.vue';
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import AvatarImg from '@/assets/imgs/avatar.webp'
 import { useStateStore } from '@/stores/state.store';
+import { useAuthStore } from '@/stores/auth.store';
 
+
+/** ---------- 状态管理 ---------- */
+// 获取用户状态
+const authStore = useAuthStore();
+const { user } = storeToRefs(authStore);
 // 获取主题状态
 const themeStore = useThemeStore();
 const { theme } = storeToRefs(themeStore);
@@ -45,6 +51,18 @@ const topbarFields = ref([
     } 
   },
 ])
+
+
+/** ---------- 逻辑方法 ---------- */
+/**
+ * 处理下拉菜单命令
+ * @param command 命令字符串
+ */
+function handleCommand(command: string) {
+
+}
+
+console.log(user)
 </script>
 
 <template>
@@ -57,6 +75,7 @@ const topbarFields = ref([
         <span class="topbar-sitename">
           博客管理
         </span>
+
         <el-popover 
           width="50" 
           title="折叠侧边栏" 
@@ -100,12 +119,23 @@ const topbarFields = ref([
             </div>
           </template>
         </el-popover>
-        <div class="topbar__user">
-          <div class="topbar__user-avatar">
-            <img :src="AvatarImg" alt="user">
+        <el-dropdown @command="handleCommand" trigger="click">
+          <div class="topbar__user">
+            <div class="topbar__user-avatar">
+              <img :src="user?.avatar || AvatarImg" alt="user">
+            </div>
+            <span class="topbar__user-role">{{ '管理员' }}</span>
+            <div class="topbar__dropdown">
+              <VIcon name="arrow-down-s" />
+            </div>
           </div>
-          <span class="topbar__user-role">管理员</span>
-        </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="profile">个人中心</el-dropdown-item>
+              <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </div>
   </div>

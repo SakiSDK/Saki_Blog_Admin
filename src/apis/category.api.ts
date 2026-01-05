@@ -8,7 +8,7 @@ import {
   CategoryListResponseSchema, categorySearchFormSchema, CategoryStatusParamsSchema, CategoryStatusResponseSchema,
   CategoryUpdateResponseSchema,
   type AllCategoriesResponse,
-  type Category, type CategoryCreateResponse, type CategoryDeleteResponse, type CategoryFormType, type CategoryListParams,
+  type CategoryCreateResponse, type CategoryDeleteResponse, type CategoryFormType, type CategoryListParams,
   type CategoryListResponse, type CategorySearchFormType, type CategoryStatusResponse,
   type CategoryUpdateResponse
 } from '@/schemas/category.schema';

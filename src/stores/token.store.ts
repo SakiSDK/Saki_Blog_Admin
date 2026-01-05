@@ -11,10 +11,15 @@ export const useTokenStore = defineStore('token', () => {
   // State
   const token = ref<string | null>(localStorage.getItem(TOKEN_KEY));
   const expiredAt = ref<string | null>(localStorage.getItem(EXPIRES_KEY));
-  const userInfo = ref<any>(() => {
-    const stored = localStorage.getItem(USER_INFO_KEY);
-    return stored ? JSON.parse(stored) : null;
-  });
+  const userInfo = ref<any>(null);
+  const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
+  if (storedUserInfo) {
+    try {
+      userInfo.value = JSON.parse(storedUserInfo);
+    } catch (e) {
+      console.error('Failed to parse user info from local storage', e);
+    }
+  }
 
   // 刷新状态管理
   const isRefreshing = ref<boolean>(false);

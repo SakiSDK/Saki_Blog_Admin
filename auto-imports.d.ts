@@ -7,6 +7,7 @@
 export {}
 declare global {
   const ElDatePicker: typeof import('element-plus/es').ElDatePicker
+  const ElInp: typeof import('element-plus/es').ElInp
   const ElInput: typeof import('element-plus/es').ElInput
   const ElInputNumber: typeof import('element-plus/es').ElInputNumber
   const ElMessage: typeof import('element-plus/es').ElMessage
