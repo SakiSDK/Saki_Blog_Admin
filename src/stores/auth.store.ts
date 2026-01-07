@@ -26,8 +26,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   /** 初始化认证状态 */
   const initAuth = () => {
-    console.log('InitAuth - UserInfo:', tokenStore.userInfo)
-    console.log('InitAuth - Token:', tokenStore.token)
+    console.log(tokenStore.userInfo)
     // 初始化 token 状态（检查过期、自动刷新等）
     tokenStore.initialize();
   }

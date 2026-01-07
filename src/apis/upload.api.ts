@@ -1,5 +1,5 @@
-import { UploadPostImageResponseSchema, type UploadPostImageResponse } from '@/schemas/upload.schema';
-import { post } from '@/utils/request.util'
+import { DeleteArticleImageResponseSchema, UploadPostImageResponseSchema, type DeleteArticleImageResponse, type UploadPostImageResponse } from '@/schemas/upload.schema';
+import { post, del } from '@/utils/request.util'
 import type { AxiosRequestConfig } from 'axios';
 import {
   validateResponse
@@ -7,26 +7,37 @@ import {
 
 
 export const UploadApi = {
-  uploadPostImage: async (
-    formData: FormData,
+  /** 上传文章内图片 */
+  uploadArticleImage: async(
+    file: File,
     config?: AxiosRequestConfig
   ): Promise<UploadPostImageResponse> => {
+    console.log("file: ", file)
+    const formData = new FormData();
+    formData.append('image', file);
     const res = await post<UploadPostImageResponse>(
-      '/upload/articles/editing/images',
+      '/upload/article/image',
       formData,
+      {
+        ...config,
+        headers: {
+          'Content-Type': undefined // 让浏览器自动生成 boundary
+        }
+      }
+    );
+    console.log("res: ", res)
+    return validateResponse( UploadPostImageResponseSchema, res );
+  },
+  /** 删除文章内图片 */
+  deleteArticleImage: async(
+    filename: string,
+    config?: AxiosRequestConfig
+  ): Promise<DeleteArticleImageResponse> => {
+    const res = await del<DeleteArticleImageResponse>(
+      `/upload/article/image/${filename}`,
       config
     );
-    return validateResponse(UploadPostImageResponseSchema, res);
+    //? 完善下这个返回值验证
+    return validateResponse( DeleteArticleImageResponseSchema, res );
   },
-  // uploadUserAvatar: async (
-  //   formData: FormData,
-  //   config?: AxiosRequestConfig
-  // ): Promise<UploadUserAvatarResponse> => {
-  //   const res = await post<UploadUserAvatarResponse>(
-  //     '/upload/user-avatar',
-  //     formData,
-  //     config
-  //   );
-  //   return validateResponse(UploadUserAvatarResponseSchema, res);
-  // },
 }

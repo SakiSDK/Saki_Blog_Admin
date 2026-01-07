@@ -2,8 +2,8 @@ import { v4 as uuidv4 } from 'uuid'
 
 
 /** 编辑会话编辑器 */
-export class EditSessionStorage {
-  private static readonly SESSION_PREFIX = 'edit_session_';
+export class EditContextStorage {
+  private static readonly DRAFT_KEY_PREFIX = 'draft_session_';
   private static readonly SESSION_EXPIRE_DAYS = 7; // 会话有效期7天
 
   /**
@@ -75,7 +75,7 @@ export class EditSessionStorage {
     
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key?.startsWith(`${this.SESSION_PREFIX}${userId}_`)) {
+      if (key?.startsWith(`${this.DRAFT_KEY_PREFIX}${userId}_`)) {
         try {
           const data = JSON.parse(localStorage.getItem(key)!);
           sessions.push(data);
@@ -92,12 +92,11 @@ export class EditSessionStorage {
    * 清理过期的编辑会话
    */
   static cleanupExpiredSessions(): number {
-    const now = new Date();
     let cleaned = 0;
     
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key?.startsWith(this.SESSION_PREFIX)) {
+      if (key?.startsWith(this.DRAFT_KEY_PREFIX)) {
         try {
           const data = JSON.parse(localStorage.getItem(key)!);
           if (this.isSessionExpired(data.createdAt)) {
@@ -114,10 +113,15 @@ export class EditSessionStorage {
     return cleaned;
   }
   
-  /** 私有方法 */
+  /** 
+   * 私有方法，获取存储键
+   * @param articleId 文章ID（新文章为null）
+   * @param userId 用户ID
+   * @returns 存储键 （返回值示例：edit_session_userId_articleId | edit_session_userId_new ）
+  */
   private static getStorageKey(articleId: string | null, userId: string): string {
     const articlePart = articleId ? `_${articleId}` : '_new';
-    return `${this.SESSION_PREFIX}${userId}${articlePart}`;
+    return `${this.DRAFT_KEY_PREFIX}${userId}${articlePart}`;
   }
   
   private static createNewSession(

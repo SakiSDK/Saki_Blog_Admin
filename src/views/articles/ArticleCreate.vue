@@ -3,16 +3,15 @@ import CardHeader from '@/components/bases/CardHeader.vue';
 import { TagNameSchema, type TagBase } from '@/schemas/tag.schema';
 import { useTagStore } from '@/stores/tag.store';
 import type { FormFieldConfig } from '@/types/components/base.type';
-import { ElForm, ElInput, ElInputNumber, ElMessage, ElRadio, ElSelect, ElUpload, ElMessageBox } from 'element-plus';
-import { nextTick, onMounted, reactive, ref, watch } from 'vue';
+import { ElForm, ElInput, ElInputNumber, ElMessage, ElRadio, ElSelect, ElUpload } from 'element-plus';
+import { nextTick, onMounted, reactive, ref, toRaw, watch } from 'vue';
 import { filter, debounce } from 'lodash'
 import MarkdownEditor from '@/components/bases/MarkdownEditor.vue';
 import { useCategoryStore } from '@/stores/category.store';
-import { EditSessionStorage } from '@/utils/sessionStorage.util';
+import { EditContextStorage } from '@/utils/sessionStorage.util';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.store';
-import { toRaw } from 'vue';
-
+import { useDraftSession } from '@/composables/useDraftSession';
 
 
 /** ---------- 类型定义 ---------- */
@@ -26,6 +25,10 @@ interface ArticleForm {
     id?: number;
   }[]
   allowComment: boolean;
+  category?: {
+    id?: number;
+    name: string;
+  }
 }
 
 
@@ -33,182 +36,17 @@ interface ArticleForm {
 const tagStore = useTagStore();
 const categoryStore = useCategoryStore();
 const inputVisible = ref<boolean>(false);
-const sessionId = ref<string | null>(null);
-const isSessionLoading = ref<boolean>(true);
 const articleId = ref<string | null>(null); // 从路由或者props中获取
 const authStore = useAuthStore();
 const { user } = authStore;
-
-
-/** ---------- 初始化操作 ---------- */
+const userId = user?.shortId || '';
 // 从路由获取文章ID
 const route = useRoute();
 articleId.value = route.params.id as string;
 
-// 最后保存时间
-const lastSavedTime = ref<string>('');
-
-// 获取当前会话ID
-const initializeSession = async () => { 
-  // 获取当前用户的shortID
-  const userId = user?.shortId;
-  if (!userId) return;
-
-  // 获取暂定的会话ID (可能是旧的，也可能是新创建的)
-  const sid = EditSessionStorage.getOrCreateSessionId(articleId.value, userId);
-  
-  // 检查是否有对应的草稿内容
-  const draftKey = `draft_${sid}`;
-  const hasDraft = !!localStorage.getItem(draftKey);
-
-  if (hasDraft) {
-    try {
-      await ElMessageBox.confirm(
-        '检测到您有未完成的草稿，是否恢复编辑？',
-        '发现草稿',
-        {
-          confirmButtonText: '恢复编辑',
-          cancelButtonText: '创建新文章',
-          type: 'info',
-          distinguishCancelAndClose: true,
-          closeOnClickModal: false,
-          closeOnPressEscape: false,
-          showClose: false 
-        }
-      );
-      
-      // 用户选择恢复
-      sessionId.value = sid;
-      loadDraft();
-      
-    } catch (action) {
-      // 用户选择取消（创建新文章）
-      if (action === 'cancel') {
-        // 1. 删除旧草稿和会话
-        localStorage.removeItem(draftKey);
-        EditSessionStorage.clearSession(articleId.value, userId);
-        
-        // 2. 创建新会话
-        sessionId.value = EditSessionStorage.getOrCreateSessionId(articleId.value, userId);
-        
-        // 3. 重置表单状态
-        content.value = '';
-        lastSavedTime.value = '';
-        formRef.value?.resetFields();
-        // 确保复杂对象也被重置
-        form.tags = [];
-        form.cover = undefined;
-        form.title = '';
-        form.author = user?.nickname || 'SakiSDK'; // 恢复默认作者
-        
-        ElMessage.success('已创建新文章草稿');
-      }
-    }
-  } else {
-    // 没有草稿，直接使用该会话
-    sessionId.value = sid;
-  }
-
-  isSessionLoading.value = false;
-}
-
-// 加载草稿
-const loadDraft = () => { 
-  if (!sessionId.value) return;
-  const draftKey = `draft_${sessionId.value}`;
-  const storedDraft = localStorage.getItem(draftKey);
-  
-  if (storedDraft) {
-    try {
-      const draftData = JSON.parse(storedDraft);
-      
-      // 恢复表单数据
-      if (draftData.form) {
-        Object.assign(form, draftData.form);
-      }
-      
-      // 恢复内容
-      if (draftData.content) {
-        content.value = draftData.content;
-      }
-
-      // 恢复最后保存时间
-      if (draftData.updatedAt) {
-        lastSavedTime.value = new Date(draftData.updatedAt).toLocaleString();
-      }
-    } catch (e) {
-      console.error('Failed to parse draft data', e);
-    }
-  }
-}
-
-// 保存草稿
-const saveDraft = debounce(() => {
-  if (!sessionId.value) return;
-  const userId = user?.shortId;
-  if (!userId) return;
-  
-  const draftKey = `draft_${sessionId.value}`;
-  const now = new Date();
-  
-  const draftData = {
-    form: toRaw(form),
-    content: content.value,
-    updatedAt: now.toISOString()
-  };
-
-  localStorage.setItem(draftKey, JSON.stringify(draftData));
-  
-  // 更新会话（记录最后编辑时间）
-  EditSessionStorage.updateSession(articleId.value, userId, sessionId.value);
-  
-  lastSavedTime.value = now.toLocaleString();
-}, 1000); // 1秒防抖
-
-// 手动保存（不防抖，立即保存）
-const handleManualSave = () => {
-  saveDraft.flush(); // 立即执行等待中的 debounced 函数
-  ElMessage.success('草稿保存成功');
-}
-
-// 清除会话
-const clearSession = () => {
-  if (!sessionId.value) return;
-  const userId = user?.shortId;
-  if (!userId) return;
-  
-  // 清除存储的内容
-  localStorage.removeItem(`draft_${sessionId.value}`);
-  
-  // 清除会话
-  EditSessionStorage.clearSession(articleId.value, userId);
-  
-  // 重置状态
-  content.value = '';
-  sessionId.value = null;
-  lastSavedTime.value = '';
-};
-
-// 组件挂载时初始化
-onMounted(() => {
-  initializeSession();
-  
-  // 清理过期会话
-  EditSessionStorage.cleanupExpiredSessions();
-});
-
-
-/** ---------- 元素绑定 ---------- */
-const inputRef = ref<typeof ElInput>();
-const inputWidth = ref<number>(60) // 默认 60px
-const measureRef = ref<HTMLElement | null>(null);
-
-
-/** ---------- 数据管理 ---------- */
+/** ---------- 基础数据 ---------- */
 const inputValue = ref('')
 const content = ref<string>('')
-
-/** ---------- 基础数据 ---------- */
 const tagList = ref<(
   TagBase & {
     id?: number;
@@ -329,7 +167,48 @@ const commentField: FormFieldConfig = {
   }
 }
 
+/** ---------- 元素绑定 ---------- */
+const inputRef = ref<typeof ElInput>();
+const inputWidth = ref<number>(60) // 默认 60px
+const measureRef = ref<HTMLElement | null>(null);
+
+/** ---------- 初始化操作 ---------- */
+const {
+  sessionId,
+  isSessionLoading,
+  lastSavedAt,
+  initializeSession,
+  handleManualSave,
+  clearSession,
+  cleanupExpiredSessions,
+} = useDraftSession(articleId.value, userId, (draft) => {
+  // 回复草稿时的回调
+  Object.assign(form, draft.form);
+  content.value = draft.content;
+});
+/** 自动保存使用防抖 */
+const autoSave = debounce(() => {
+  if (sessionId.value) {
+    const draftKey = `draft_${sessionId.value}`;
+    const now = new Date();
+    const draftData = {
+      form: toRaw(form),
+      content: content.value,
+      updatedAt: now.toISOString(),
+    };
+    localStorage.setItem(draftKey, JSON.stringify(draftData));
+    EditContextStorage.updateSession(articleId.value, userId, sessionId.value);
+    lastSavedAt.value = now.toLocaleString();
+  }
+}, 1000);
+
+
+
 /** ---------- 逻辑方法 ---------- */
+// 手动保存按钮
+const handleManualSaveClick = () => {
+  handleManualSave(form, content.value);
+}
 // 标签选择
 const handleTagSelect = (selectedTag: TagBase) => {
   const target = tagList.value.find((tag) => tag.id === selectedTag.id);
@@ -399,6 +278,21 @@ const handleInputConfirm = () => {
 const handleSubmit = async () => {
   if (!formRef.value) return;
 
+  try {
+    // 先执行 Element Plus 表单校验
+    await formRef.value.validate();
+  } catch (error) {
+    ElMessage.warning('请检查表单内容');
+    return;
+  }
+
+  const payload = {
+    ...form,
+    content: content.value.trim(),
+    userId: userId,
+  }
+
+  
 };
 // 重置表单
 // const resetForm = () => {
@@ -448,18 +342,23 @@ watch(inputValue, async () => {
   const width = measureRef.value.offsetWidth;
   inputWidth.value = Math.max(60, width);
 })
-watch(form, (val) => { 
-  console.log(val)
-})
-
+// 监听表单变化自动保存
+watch([form, content], autoSave, { deep: true });
 
 /** ---------- 生命周期钩子 ---------- */
+// 组件挂载时初始化
 onMounted(async () => {
-  // 加载分类列表
-  await loadCategories();
-  // 加载标签列表
+  // 初始化会话
+  initializeSession();
+  // 清理过期会话
+  cleanupExpiredSessions();
+  // 清理过期会话
+  EditContextStorage.cleanupExpiredSessions();
+
+  // 加载分类，标签...
   await loadTags();
-})
+  await loadCategories();
+});
 </script>
 
 <template>
@@ -639,12 +538,12 @@ onMounted(async () => {
             </div>
           <!-- 操作按钮 -->
           <el-form-item class="article-create__actions" label-width="0">
-            <span v-if="lastSavedTime" class="article-create__save-time">
-              上次保存: {{ lastSavedTime }}
+            <span v-if="lastSavedAt" class="article-create__save-time">
+              上次保存: {{ lastSavedAt }}
             </span>
             <el-button 
               class="article-create__btn article-create__btn-reset" 
-              @click="handleManualSave"
+              @click="handleManualSaveClick"
             >
               <VIcon name="draft"/>
               <span class="article-create__btn-text">保存草稿</span>
